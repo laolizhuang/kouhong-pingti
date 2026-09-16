@@ -97,6 +97,7 @@ st.markdown(
     }
     .plan-price { color: #c45c5c; font-size: 1.6rem; font-weight: 700; }
     .lock-tip { color: #a05a5a; font-size: 0.9rem; }
+    .step-cap { text-align: center; color: #8a5a5a; font-size: 0.85rem; margin-top: -6px; }
     .pay-note {
         text-align: center;
         color: #8a5a5a;
@@ -125,6 +126,18 @@ def 图片路径(文件名):
     if 路径.exists():
         return str(路径)
     return str(图片目录 / "tomato.png")
+
+
+def 试色图路径(色系, 种类="涂好"):
+    if 种类 == "未涂":
+        文件 = 图片目录 / "试色模特" / f"素唇_{色系}.png"
+    elif 种类 == "涂抹":
+        文件 = 图片目录 / "试色模特" / f"涂抹_{色系}.png"
+    else:
+        文件 = 图片目录 / "试色模特" / f"{色系}.png"
+    if 文件.exists():
+        return str(文件)
+    return 图片路径("tomato.png")
 
 
 def 妆效匹配(妆效, 偏好):
@@ -204,7 +217,7 @@ st.session_state["会员"] = 会员
 已开通 = 会员 is not None
 st.caption("当前身份：" + 会员文案(会员))
 
-with st.expander("开通会员，解锁全部试色视频 / 教学 / AI 平替", expanded=not 已开通):
+with st.expander("开通会员，解锁试色对比图 / 教学 / AI 平替", expanded=not 已开通):
     if 已开通:
         st.success("已是会员。" + 会员文案(会员))
     else:
@@ -234,29 +247,33 @@ with st.expander("开通会员，解锁全部试色视频 / 教学 / AI 平替",
         )
 
 st.markdown("### 先学怎么涂")
-教1, 教2 = st.columns([1.15, 1.35])
-with 教1:
-    教学视频 = Path(__file__).parent / "口红视频" / "口红教学.mp4"
-    if 已开通 and 教学视频.exists():
-        st.video(str(教学视频), format="video/mp4", autoplay=True, muted=True, loop=True)
-    elif 教学视频.exists():
-        st.image(图片路径("banner.png"), use_container_width=True)
-        st.warning("教学视频是会员内容。开通后可看完整 6 步示范。")
+教学步骤 = [
+    ("01.png", "1. 打底保湿", "先涂薄薄一层润唇膏"),
+    ("02.png", "2. 勾勒唇峰", "从唇峰两点开始画轮廓"),
+    ("03.png", "3. 填满上唇", "沿着唇线往中间填色"),
+    ("04.png", "4. 填满下唇", "从下唇中央向外推开"),
+    ("05.png", "5. 抿匀修角", "轻轻抿一下，修齐嘴角"),
+    ("06.png", "6. 完成", "左右对称就可以出门了"),
+]
+教学目录 = 图片目录 / "口红教学"
+if 已开通:
+    for 起始 in range(0, len(教学步骤), 3):
+        列 = st.columns(3, gap="large")
+        for i, (文件, 标题, 说明) in enumerate(教学步骤[起始:起始 + 3]):
+            with 列[i]:
+                图 = 教学目录 / 文件
+                if 图.exists():
+                    st.image(str(图), use_container_width=True)
+                st.markdown(f"**{标题}**")
+                st.caption(说明)
+    st.caption("对照每张图做一遍，就不会花、不会歪。")
+else:
+    预览 = 教学目录 / "01.png"
+    if 预览.exists():
+        st.image(str(预览), use_container_width=True)
     else:
-        st.info("教学视频还没生成，请先运行：python 生成口红教学视频.py")
-with 教2:
-    st.markdown("**6 步把口红画干净**")
-    st.markdown(
-        """
-1. **打底保湿** — 先涂薄薄一层润唇膏  
-2. **勾勒唇峰** — 从唇峰两点开始画轮廓  
-3. **填满上唇** — 沿着唇线往中间填色  
-4. **填满下唇** — 从下唇中央向外推开  
-5. **抿匀修角** — 轻轻抿一下，修齐嘴角  
-6. **完成** — 左右对称就可以出门了  
-        """
-    )
-    st.caption("视频会循环播放，跟着做一遍就不会花、不会歪。")
+        st.image(图片路径("banner.png"), use_container_width=True)
+    st.warning("涂口红教学是会员内容。开通后可看完整 6 步示范图。")
 
 # ---------- 全库筛选 ----------
 st.subheader("口红全库")
@@ -333,23 +350,24 @@ with c3:
 目标口红 = ""
 if 查询方式 == "从上面全库点选":
     目标口红 = 当前["全名"]
-    左, 右 = st.columns([1.1, 1.4])
-    with 左:
-        视频文件 = Path(__file__).parent / "口红视频" / 当前["视频"]
-        if 已开通 and 视频文件.exists():
-            st.video(str(视频文件), format="video/mp4", autoplay=True, muted=True, loop=True)
-        else:
-            st.image(图片路径(当前["图片"]), use_container_width=True)
-            if not 已开通:
-                st.caption("开通会员可看：未涂 → 涂抹 → 涂好 → 左右对比")
-    with 右:
-        st.markdown(f"#### {当前['全名']}")
-        st.markdown(
-            f'<div class="swatch" style="background:{当前["色卡"]}; width:160px;"></div>',
-            unsafe_allow_html=True,
-        )
-        st.write(f"{当前['色系']} · {当前['妆效']} · ¥{当前['价格']}")
-        st.caption(当前["说明"] + "（视频：未涂 → 涂抹 → 涂好 → 左右对比）")
+    if 已开通:
+        a, b, c = st.columns(3, gap="large")
+        with a:
+            st.image(试色图路径(当前["色系"], "未涂"), use_container_width=True, caption="未涂")
+        with b:
+            st.image(试色图路径(当前["色系"], "涂抹"), use_container_width=True, caption="涂抹中")
+        with c:
+            st.image(试色图路径(当前["色系"], "涂好"), use_container_width=True, caption="涂好")
+    else:
+        st.image(图片路径(当前["图片"]), use_container_width=True)
+        st.caption("开通会员可看：未涂 / 涂抹中 / 涂好 对比图")
+    st.markdown(f"#### {当前['全名']}")
+    st.markdown(
+        f'<div class="swatch" style="background:{当前["色卡"]}; width:160px;"></div>',
+        unsafe_allow_html=True,
+    )
+    st.write(f"{当前['色系']} · {当前['妆效']} · ¥{当前['价格']}")
+    st.caption(当前["说明"])
 else:
     目标口红 = st.text_input("输入口红名字（如：阿玛尼 红管 405、迪奥 999）")
 
@@ -379,7 +397,7 @@ if st.button("查找平替", type="primary"):
                 st.markdown(f"### 「{基准['全名']}」的同色系平替（{基准['色系']}）")
                 展示卡片(平替们)
                 if 隐藏数:
-                    st.warning(f"还有 {隐藏数} 条平替已锁定。开通会员可看全部，并解锁试色视频和 AI。")
+                    st.warning(f"还有 {隐藏数} 条平替已锁定。开通会员可看全部，并解锁试色对比图和 AI。")
             else:
                 st.markdown(f"### 「{基准['全名']}」的同色系平替（{基准['色系']}）")
                 展示卡片(平替们)
@@ -426,6 +444,6 @@ if st.button("查找平替", type="primary"):
                         st.error(f"请求出错：{e}")
 
 st.markdown(
-    '<div class="hint">点开任意口红可看真人试色短视频。全库覆盖常见大牌和平价热门色。没收录的名字可以自己输入，用 AI 补查。屏幕有色差，下手前请对照试色。</div>',
+    '<div class="hint">点开任意口红可看真人试色对比图。全库覆盖常见大牌和平价热门色。没收录的名字可以自己输入，用 AI 补查。屏幕有色差，下手前请对照试色。</div>',
     unsafe_allow_html=True,
 )
