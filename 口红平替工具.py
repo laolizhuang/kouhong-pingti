@@ -1,5 +1,5 @@
 # ============================================
-# 口红平替查询工具（全库版：所有口红都能点、能搜）
+# 觅色：口红平替查询（全库版：所有口红都能点、能搜）
 # 使用前：把密钥占位符换成你的真实 DeepSeek 密钥（AI 查询才可用）
 # 运行：streamlit run 口红平替工具.py
 # ============================================
@@ -21,7 +21,7 @@ from 会员系统 import (
     会员文案,
 )
 
-st.set_page_config(page_title="口红平替查询", page_icon="💄", layout="wide")
+st.set_page_config(page_title="觅色", page_icon="💄", layout="wide")
 
 try:
     api_key = st.secrets.get("DEEPSEEK_API_KEY", "") or os.environ.get("DEEPSEEK_API_KEY", "")
@@ -188,9 +188,9 @@ def 展示卡片(列表):
 
 # ---------- 顶部海报 ----------
 st.image(图片路径("banner.png"), use_container_width=True)
-st.markdown('<div class="hero-title">口红平替馆</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-title">觅色</div>', unsafe_allow_html=True)
 st.markdown(
-    f'<div class="hero-caption">全库 {len(口红库)} 支 · 点任意一支找同色平替</div>',
+    f'<div class="hero-caption">全库 {len(口红库)} 支 · 点一支，遇见同色平替</div>',
     unsafe_allow_html=True,
 )
 
