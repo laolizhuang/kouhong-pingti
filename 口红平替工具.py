@@ -14,9 +14,11 @@ from 口红数据 import 获取口红库
 from 会员系统 import (
     免费可看支数,
     免费平替条数,
-    兑换,
     客服微信,
-    套餐,
+    开通会员,
+    收款码路径,
+    月卡价格,
+    月卡说明,
     会员仍有效,
     会员文案,
 )
@@ -27,11 +29,6 @@ try:
     api_key = st.secrets.get("DEEPSEEK_API_KEY", "") or os.environ.get("DEEPSEEK_API_KEY", "")
 except Exception:
     api_key = os.environ.get("DEEPSEEK_API_KEY", "")
-
-try:
-    云端卡密 = st.secrets.get("member_codes", "")
-except Exception:
-    云端卡密 = ""
 
 图片目录 = Path(__file__).parent / "口红图片"
 口红库 = 获取口红库()
@@ -100,6 +97,12 @@ st.markdown(
     }
     .plan-price { color: #c45c5c; font-size: 1.6rem; font-weight: 700; }
     .lock-tip { color: #a05a5a; font-size: 0.9rem; }
+    .pay-note {
+        text-align: center;
+        color: #8a5a5a;
+        font-size: 0.92rem;
+        margin: 8px 0 14px 0;
+    }
 
     .stButton > button {
         background: linear-gradient(90deg, #c45c5c, #d47a6a);
@@ -205,37 +208,30 @@ with st.expander("开通会员，解锁全部试色视频 / 教学 / AI 平替",
     if 已开通:
         st.success("已是会员。" + 会员文案(会员))
     else:
-        p1, p2 = st.columns(2)
-        with p1:
-            st.markdown(
-                f'<div class="plan"><div>月卡</div>'
-                f'<div class="plan-price">¥ {套餐["月卡"]["价格"]}</div>'
-                f'<div class="lock-tip">{套餐["月卡"]["说明"]}</div></div>',
-                unsafe_allow_html=True,
-            )
-        with p2:
-            st.markdown(
-                f'<div class="plan"><div>永久会员</div>'
-                f'<div class="plan-price">¥ {套餐["永久"]["价格"]}</div>'
-                f'<div class="lock-tip">{套餐["永久"]["说明"]}</div></div>',
-                unsafe_allow_html=True,
-            )
-        收款码 = 图片目录 / "收款码.png"
-        if 收款码.exists():
-            st.image(str(收款码), width=220, caption="微信/支付宝收款码")
         st.markdown(
-            f"付款后把截图发给客服微信 **{客服微信}**，会发你兑换码。"
-            "免费版可看 12 支出口红和 1 条平替；会员可看教学视频、试色全过程、全库和 AI。"
+            f'<div class="plan"><div>会员</div>'
+            f'<div class="plan-price">¥ {月卡价格}</div>'
+            f'<div class="lock-tip">{月卡说明}</div></div>',
+            unsafe_allow_html=True,
         )
-        兑换码 = st.text_input("已有兑换码？贴在这里", placeholder="例如 LIP-XXXX-XXXX")
-        if st.button("立即兑换"):
-            成功, 说明, 数据 = 兑换(兑换码, 云端卡密)
-            if 成功:
-                st.session_state["会员"] = 数据
-                st.success(说明)
-                st.rerun()
-            else:
-                st.error(说明)
+        收款码 = 收款码路径()
+        if 收款码:
+            左空, 码列, 右空 = st.columns([1, 1.2, 1])
+            with 码列:
+                st.image(str(收款码), use_container_width=True, caption="微信 / 支付宝收款码")
+            st.markdown(
+                f'<div class="pay-note">打开微信或支付宝，扫上面的码付 ¥{月卡价格}，'
+                "付完回到这里点按钮即可解锁。</div>",
+                unsafe_allow_html=True,
+            )
+        else:
+            st.warning("还没放收款码。请把微信或支付宝收款码图片保存为 `口红图片/收款码.png`。")
+        if st.button("我已付款，立即解锁", type="primary"):
+            st.session_state["会员"] = 开通会员()
+            st.rerun()
+        st.caption(
+            f"免费可看 12 支口红和 1 条平替。付款遇到问题可加微信 {客服微信}。"
+        )
 
 st.markdown("### 先学怎么涂")
 教1, 教2 = st.columns([1.15, 1.35])
