@@ -1,0 +1,33 @@
+# ========== 不要上传到网上的东西 ==========
+
+__pycache__/
+*.pyc
+.env
+config.py
+会员卡密.txt
+会员解锁.json
+.streamlit/secrets.toml
+
+# 学习练习文件不上线
+第*.py
+1.py
+1.变量.py
+2.列表.py
+3.操作列表.py
+4.if 语句.py
+5.字典.py
+6.用户输入和while循环.py
+7.函数.py
+实作演练.py
+计算平均成绩.py
+调用DeepSeek演示.py
+第一个AI产品.py
+房产文案工具.py
+第3步补充_调用DeepSeek演示.py
+第11节_综合例子.py
+第11节_综合例子_演示版.py
+第2步_requests调接口演示.py
+第3步_streamlit界面演示.py
+成绩单.txt
+.vscode/
+迁移用户文件夹.ps1
