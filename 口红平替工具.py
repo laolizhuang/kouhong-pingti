@@ -11,17 +11,6 @@ import requests
 import streamlit as st
 
 from 口红数据 import 获取口红库
-from 会员系统 import (
-    免费可看支数,
-    免费平替条数,
-    客服微信,
-    校验口令,
-    收款码路径,
-    月卡价格,
-    月卡说明,
-    会员仍有效,
-    会员文案,
-)
 
 st.set_page_config(page_title="觅色", page_icon="💄", layout="wide")
 
@@ -29,10 +18,6 @@ try:
     api_key = st.secrets.get("DEEPSEEK_API_KEY", "") or os.environ.get("DEEPSEEK_API_KEY", "")
 except Exception:
     api_key = os.environ.get("DEEPSEEK_API_KEY", "")
-try:
-    云端口令 = st.secrets.get("unlock_password", "")
-except Exception:
-    云端口令 = ""
 
 图片目录 = Path(__file__).parent / "口红图片"
 口红库 = 获取口红库()
@@ -90,23 +75,6 @@ st.markdown(
         text-align: center;
         color: #8a5a5a;
         margin-bottom: 12px;
-    }
-    .plan {
-        background: #fff;
-        border-radius: 18px;
-        padding: 16px 18px;
-        box-shadow: 0 8px 22px rgba(120, 60, 60, 0.08);
-        border: 1px solid rgba(196, 92, 92, 0.18);
-        margin-bottom: 8px;
-    }
-    .plan-price { color: #c45c5c; font-size: 1.6rem; font-weight: 700; }
-    .lock-tip { color: #a05a5a; font-size: 0.9rem; }
-    .step-cap { text-align: center; color: #8a5a5a; font-size: 0.85rem; margin-top: -6px; }
-    .pay-note {
-        text-align: center;
-        color: #8a5a5a;
-        font-size: 0.92rem;
-        margin: 8px 0 14px 0;
     }
 
     .stButton > button {
@@ -214,47 +182,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-if "会员" not in st.session_state:
-    st.session_state["会员"] = None
-会员 = 会员仍有效(st.session_state.get("会员"))
-st.session_state["会员"] = 会员
-已开通 = 会员 is not None
-st.caption("当前身份：" + 会员文案(会员))
-
-with st.expander("开通会员，解锁试色对比图 / 教学 / AI 平替", expanded=not 已开通):
-    if 已开通:
-        st.success("已是会员。" + 会员文案(会员))
-    else:
-        st.markdown(
-            f'<div class="plan"><div>会员</div>'
-            f'<div class="plan-price">¥ {月卡价格}</div>'
-            f'<div class="lock-tip">{月卡说明}</div></div>',
-            unsafe_allow_html=True,
-        )
-        收款码 = 收款码路径()
-        if 收款码:
-            左空, 码列, 右空 = st.columns([1, 1.2, 1])
-            with 码列:
-                st.image(str(收款码), use_container_width=True, caption="微信 / 支付宝收款码")
-            st.markdown(
-                f'<div class="pay-note">1. 扫码付 ¥{月卡价格}<br>'
-                f"2. 把付款截图发给微信 <b>{客服微信}</b><br>"
-                "3. 客服确认到账后，把开通口令填在下面</div>",
-                unsafe_allow_html=True,
-            )
-        else:
-            st.warning("还没放收款码。请把微信或支付宝收款码图片保存为 `口红图片/收款码.png`。")
-        口令 = st.text_input("开通口令", placeholder="客服确认付款后发给你", type="password")
-        if st.button("解锁会员", type="primary"):
-            成功, 说明, 数据 = 校验口令(口令, 云端口令)
-            if 成功:
-                st.session_state["会员"] = 数据
-                st.success(说明)
-                st.rerun()
-            else:
-                st.error(说明)
-        st.caption("免费可看 12 支口红和 1 条平替。没付款拿不到口令，点按钮也不会开通。")
-
 st.markdown("### 先学怎么涂")
 教学步骤 = [
     ("01.png", "1. 打底保湿", "先涂薄薄一层润唇膏"),
@@ -265,24 +192,16 @@ st.markdown("### 先学怎么涂")
     ("06.png", "6. 完成", "左右对称就可以出门了"),
 ]
 教学目录 = 图片目录 / "口红教学"
-if 已开通:
-    for 起始 in range(0, len(教学步骤), 3):
-        列 = st.columns(3, gap="large")
-        for i, (文件, 标题, 说明) in enumerate(教学步骤[起始:起始 + 3]):
-            with 列[i]:
-                图 = 教学目录 / 文件
-                if 图.exists():
-                    st.image(str(图), use_container_width=True)
-                st.markdown(f"**{标题}**")
-                st.caption(说明)
-    st.caption("对照每张图做一遍，就不会花、不会歪。")
-else:
-    预览 = 教学目录 / "01.png"
-    if 预览.exists():
-        st.image(str(预览), use_container_width=True)
-    else:
-        st.image(图片路径("banner.png"), use_container_width=True)
-    st.warning("涂口红教学是会员内容。开通后可看完整 6 步示范图。")
+for 起始 in range(0, len(教学步骤), 3):
+    列 = st.columns(3, gap="large")
+    for i, (文件, 标题, 说明) in enumerate(教学步骤[起始:起始 + 3]):
+        with 列[i]:
+            图 = 教学目录 / 文件
+            if 图.exists():
+                st.image(str(图), use_container_width=True)
+            st.markdown(f"**{标题}**")
+            st.caption(说明)
+st.caption("对照每张图做一遍，就不会花、不会歪。")
 
 # ---------- 全库筛选 ----------
 st.subheader("口红全库")
@@ -309,19 +228,10 @@ for 口红 in 口红库:
             continue
     展示列表.append(口红)
 
-全部命中 = len(展示列表)
-if not 已开通:
-    展示列表 = 展示列表[:免费可看支数]
-    st.markdown(
-        f'<div class="count">免费预览 {len(展示列表)} / {全部命中} 支'
-        f'（全库共 {len(口红库)} 支，开通会员看全部）</div>',
-        unsafe_allow_html=True,
-    )
-else:
-    st.markdown(
-        f'<div class="count">当前显示 {len(展示列表)} / {len(口红库)} 支，点击下方色号即可选中</div>',
-        unsafe_allow_html=True,
-    )
+st.markdown(
+    f'<div class="count">当前显示 {len(展示列表)} / {len(口红库)} 支，点击下方色号即可选中</div>',
+    unsafe_allow_html=True,
+)
 
 if "选中id" not in st.session_state:
     st.session_state["选中id"] = 口红库[0]["id"]
@@ -359,17 +269,13 @@ with c3:
 目标口红 = ""
 if 查询方式 == "从上面全库点选":
     目标口红 = 当前["全名"]
-    if 已开通:
-        a, b, c = st.columns(3, gap="large")
-        with a:
-            st.image(试色图路径(当前["色系"], "未涂"), use_container_width=True, caption="未涂")
-        with b:
-            st.image(试色图路径(当前["色系"], "涂抹"), use_container_width=True, caption="涂抹中")
-        with c:
-            st.image(试色图路径(当前["色系"], "涂好"), use_container_width=True, caption="涂好")
-    else:
-        st.image(图片路径(当前["图片"]), use_container_width=True)
-        st.caption("开通会员可看：未涂 / 涂抹中 / 涂好 对比图")
+    a, b, c = st.columns(3, gap="large")
+    with a:
+        st.image(试色图路径(当前["色系"], "未涂"), use_container_width=True, caption="未涂")
+    with b:
+        st.image(试色图路径(当前["色系"], "涂抹"), use_container_width=True, caption="涂抹中")
+    with c:
+        st.image(试色图路径(当前["色系"], "涂好"), use_container_width=True, caption="涂好")
     st.markdown(f"#### {当前['全名']}")
     st.markdown(
         f'<div class="swatch" style="background:{当前["色卡"]}; width:160px;"></div>',
@@ -400,25 +306,15 @@ if st.button("查找平替", type="primary"):
 
         if 基准:
             平替们 = 找平替(基准, 预算, 妆效偏好, 只看更便宜)
-            if not 已开通:
-                隐藏数 = max(0, len(平替们) - 免费平替条数)
-                平替们 = 平替们[:免费平替条数]
-                st.markdown(f"### 「{基准['全名']}」的同色系平替（{基准['色系']}）")
-                展示卡片(平替们)
-                if 隐藏数:
-                    st.warning(f"还有 {隐藏数} 条平替已锁定。开通会员可看全部，并解锁试色对比图和 AI。")
-            else:
-                st.markdown(f"### 「{基准['全名']}」的同色系平替（{基准['色系']}）")
-                展示卡片(平替们)
+            st.markdown(f"### 「{基准['全名']}」的同色系平替（{基准['色系']}）")
+            展示卡片(平替们)
             筛选后 = 平替们
         else:
             st.info("全库暂时没有完全对上这支名字，下面用 AI 帮你找平替。")
             筛选后 = []
 
-        需要AI = 已开通 and ((not 筛选后) or 用AI补充)
-        if (not 筛选后 or 用AI补充) and not 已开通:
-            st.info("AI 平替是会员功能。开通后可对全库没有的色号继续查询。")
-        elif 需要AI:
+        需要AI = (not 筛选后) or 用AI补充
+        if 需要AI:
             if not api_key:
                 st.error("还没设置 DeepSeek 密钥。请在终端先运行：$env:DEEPSEEK_API_KEY='你的密钥'")
             else:
