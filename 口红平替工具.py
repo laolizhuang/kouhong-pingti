@@ -10,6 +10,7 @@ from pathlib import Path
 import smtplib
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 from 口红数据 import 获取口红库
 
@@ -232,10 +233,11 @@ def 画出建议箱():
 def 选中口红(口红id):
     st.session_state["选中id"] = 口红id
     st.session_state["页面"] = "介绍"
+    st.session_state.pop("平替介绍id", None)
     st.rerun()
 
 
-def 展示卡片(列表):
+def 展示卡片(列表, 放下面=False):
     if not 列表:
         st.warning("按当前条件没有筛到。试试放宽品牌、色系或预算，或去下面建议箱留言。")
         return
@@ -253,31 +255,16 @@ def 展示卡片(列表):
                 st.markdown(f'<div class="price">¥ {口红["价格"]}</div>', unsafe_allow_html=True)
                 st.markdown(f'<div class="meta">{口红["说明"]}</div>', unsafe_allow_html=True)
                 if st.button("查看介绍", key=f"card_{口红['id']}", use_container_width=True):
-                    选中口红(口红["id"])
+                    if 放下面:
+                        st.session_state["平替介绍id"] = 口红["id"]
+                        st.session_state["滚到平替介绍"] = True
+                        st.rerun()
+                    else:
+                        选中口红(口红["id"])
 
 
-def 画出平替(当前):
-    st.markdown("### 同色系平替")
-    c1, c2 = st.columns(2)
-    with c1:
-        预算 = st.slider("最高预算（元）", min_value=30, max_value=500, value=150, step=10)
-    with c2:
-        妆效偏好 = st.selectbox("妆效", ["不限", "哑光/雾面", "丝绒", "润泽/水光"])
-    只看更便宜 = st.checkbox("只看不超过预算的平替", value=True)
-    平替们 = 找平替(当前, 预算, 妆效偏好, 只看更便宜)
-    if 平替们:
-        st.caption(f"找到 {len(平替们)} 支和「{当前['全名']}」同色系的平替，点卡片可跳到那支的介绍")
-        展示卡片(平替们)
-    else:
-        st.info("这支暂时没有合适平替，可以把需求写到最下面的建议箱。")
-
-
-def 画出口红介绍(当前):
-    st.markdown("<div style='height: 1.2rem'></div>", unsafe_allow_html=True)
-    if st.button("← 返回全库"):
-        st.session_state["页面"] = "全库"
-        st.rerun()
-    st.markdown(f"### {当前['全名']}")
+def 画出详细介绍(当前, 标题=None):
+    st.markdown(f"### {标题 or 当前['全名']}")
     st.caption("色号图、试色，以及这支口红的真实上嘴情况")
     图列 = st.columns(4, gap="large")
     with 图列[0]:
@@ -297,6 +284,48 @@ def 画出口红介绍(当前):
         f"{当前['色系']} · {当前['妆效']}　｜　参考价 ¥{当前['价格']}"
     )
     st.markdown(f'<div class="intro">{当前["介绍"]}</div>', unsafe_allow_html=True)
+
+
+def 画出平替(当前):
+    st.markdown("### 同色系平替")
+    c1, c2 = st.columns(2)
+    with c1:
+        预算 = st.slider("最高预算（元）", min_value=30, max_value=500, value=150, step=10)
+    with c2:
+        妆效偏好 = st.selectbox("妆效", ["不限", "哑光/雾面", "丝绒", "润泽/水光"])
+    只看更便宜 = st.checkbox("只看不超过预算的平替", value=True)
+    平替们 = 找平替(当前, 预算, 妆效偏好, 只看更便宜)
+    if 平替们:
+        st.caption(f"找到 {len(平替们)} 支和「{当前['全名']}」同色系的平替，点查看介绍会在下面展开")
+        展示卡片(平替们, 放下面=True)
+    else:
+        st.info("这支暂时没有合适平替，可以把需求写到最下面的建议箱。")
+    平替当前 = 按id查找(st.session_state.get("平替介绍id"))
+    if 平替当前:
+        st.markdown("---")
+        st.markdown("### 这支平替的介绍")
+        画出详细介绍(平替当前)
+        if st.session_state.pop("滚到平替介绍", False):
+            components.html(
+                """
+                <script>
+                const doc = window.parent.document;
+                const heads = [...doc.querySelectorAll('h3')];
+                const el = heads.reverse().find(h => h.innerText.includes('这支平替的介绍'));
+                if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+                </script>
+                """,
+                height=0,
+            )
+
+
+def 画出口红介绍(当前):
+    st.markdown("<div style='height: 1.2rem'></div>", unsafe_allow_html=True)
+    if st.button("← 返回全库"):
+        st.session_state["页面"] = "全库"
+        st.session_state.pop("平替介绍id", None)
+        st.rerun()
+    画出详细介绍(当前)
     st.markdown("---")
     画出平替(当前)
 
