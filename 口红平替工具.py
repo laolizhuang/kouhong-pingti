@@ -38,7 +38,7 @@ st.markdown(
         font-family: "Noto Sans SC", sans-serif;
         color: #3b2a2a;
     }
-    .block-container { padding-top: 1.2rem; max-width: 1180px; }
+    .block-container { padding-top: 3.4rem; max-width: 1180px; }
 
     h1, h2, h3 { font-family: "Noto Serif SC", serif !important; color: #4a2c2c !important; }
 
@@ -94,8 +94,10 @@ st.markdown(
         border: 0;
         border-radius: 999px;
         height: 2.6rem;
+        padding: 0 1.4rem;
         font-weight: 600;
         font-size: 0.85rem;
+        white-space: nowrap;
     }
     .stButton > button:hover { background: linear-gradient(90deg, #b34e4e, #c96b5c); color: white; }
     </style>
@@ -271,6 +273,7 @@ def 画出平替(当前):
 
 
 def 画出口红介绍(当前):
+    st.markdown("<div style='height: 1.2rem'></div>", unsafe_allow_html=True)
     if st.button("← 返回全库"):
         st.session_state["页面"] = "全库"
         st.rerun()
