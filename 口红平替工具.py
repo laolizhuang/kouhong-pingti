@@ -4,7 +4,10 @@
 # ============================================
 
 from datetime import datetime
+from email.header import Header
+from email.mime.text import MIMEText
 from pathlib import Path
+import smtplib
 
 import streamlit as st
 
@@ -14,9 +17,12 @@ st.set_page_config(page_title="觅色", page_icon="💄", layout="wide")
 
 # 打开最底下「我是站长」时用这个密码看用户留言
 站长密码 = "mise888"
+# 建议箱会发到这个 QQ 邮箱；授权码不要写进代码，写在 邮箱授权码.txt
+收件邮箱 = "2833909485@qq.com"
 
 图片目录 = Path(__file__).parent / "口红图片"
 建议文件 = Path(__file__).parent / "建议箱.txt"
+授权码文件 = Path(__file__).parent / "邮箱授权码.txt"
 口红库 = 获取口红库()
 
 
@@ -157,6 +163,38 @@ def 找平替(当前, 预算, 妆效偏好, 只看更便宜):
     return 结果
 
 
+def 取QQ授权码():
+    try:
+        码 = (st.secrets.get("qq_auth_code", "") or "").strip()
+        if 码:
+            return 码
+    except Exception:
+        pass
+    if 授权码文件.exists():
+        for 一行 in 授权码文件.read_text(encoding="utf-8").splitlines():
+            一行 = 一行.strip()
+            if 一行 and not 一行.startswith("#"):
+                return 一行
+    return ""
+
+
+def 发到QQ邮箱(内容):
+    授权码 = 取QQ授权码()
+    if not 授权码:
+        return False, "还没设置QQ邮箱授权码"
+    邮件 = MIMEText(内容, "plain", "utf-8")
+    邮件["From"] = 收件邮箱
+    邮件["To"] = 收件邮箱
+    邮件["Subject"] = Header("【觅色】建议箱新留言", "utf-8")
+    try:
+        with smtplib.SMTP_SSL("smtp.qq.com", 465, timeout=20) as smtp:
+            smtp.login(收件邮箱, 授权码)
+            smtp.sendmail(收件邮箱, [收件邮箱], 邮件.as_string())
+        return True, "已发到QQ邮箱"
+    except Exception as e:
+        return False, str(e)
+
+
 def 收下建议(内容):
     内容 = (内容 or "").strip()
     if not 内容:
@@ -168,10 +206,15 @@ def 收下建议(内容):
             f.write(一条 + "\n")
     except Exception:
         pass
-    return True, "收到啦，我们会尽量补进全库。"
+    发出去, _说明 = 发到QQ邮箱(一条)
+    if 发出去:
+        return True, "收到啦，已经发到站长的QQ邮箱。"
+    return True, "收到啦，已记在网页里。邮箱还没接通的话，站长可在最底下查看。"
 
 
 def 画出建议箱():
+    if st.session_state.pop("清空建议", False):
+        st.session_state["suggestion_box"] = ""
     st.markdown("### 建议箱")
     st.caption("全库没有你要的色号？写在这里，我们后面补进去。")
     内容 = st.text_area(
@@ -182,19 +225,38 @@ def 画出建议箱():
     if st.button("投进建议箱", type="primary"):
         成功, 说明 = 收下建议(内容)
         if 成功:
-            st.success(说明)
+            st.session_state["建议结果"] = 说明
+            st.session_state["清空建议"] = True
+            st.rerun()
         else:
             st.warning(说明)
+    if st.session_state.get("建议结果"):
+        st.success(st.session_state.pop("建议结果"))
 
 
 def 画出站长信箱():
-    with st.expander("我是站长，查看用户留言"):
+    with st.expander("我是站长，查看用户留言 / 开通QQ邮箱"):
         密码 = st.text_input("查看密码", type="password", key="owner_pw")
         if 密码 == 站长密码:
+            if not 取QQ授权码():
+                st.warning("QQ邮箱还没接通。按下面做一次，之后用户留言会发到你的QQ邮箱。")
+                st.markdown(
+                    """
+1. 电脑打开 [QQ邮箱](https://mail.qq.com) 并登录  
+2. 点 **设置 → 账户**  
+3. 找到 **POP3/SMTP服务**，点开启  
+4. 按提示发短信，得到一串 **授权码**（不是QQ密码）  
+5. 把授权码单独一行写进本文件夹的 `邮箱授权码.txt`  
+6. 关掉本地网页再重新运行 `streamlit run 口红平替工具.py`  
+7. 网上版还要在 Streamlit 的 Secrets 里加：`qq_auth_code = "授权码"`
+                    """
+                )
+            else:
+                st.success(f"QQ邮箱已接通，留言会发到 {收件邮箱}")
             列表 = 全局建议()
-            st.caption(f"共 {len(列表)} 条")
+            st.caption(f"本页暂存 {len(列表)} 条")
             if not 列表:
-                st.info("还没有人留言。先自己在上面的建议箱试投一条，再回到这里查看。")
+                st.info("还没有人留言。先自己在上面的建议箱试投一条。")
             else:
                 for 一条 in reversed(列表):
                     st.write(一条)
@@ -298,8 +360,29 @@ for 起始 in range(0, len(展示列表), 每行):
             )
             if st.button(口红["简称"], key=f"pick_{口红['id']}", use_container_width=True):
                 st.session_state["选中id"] = 口红["id"]
+                st.session_state["刚点口红"] = True
+                st.rerun()
 
-# ---------- 当前选择 + 平替条件 ----------
+当前 = 按id查找(st.session_state["选中id"])
+if 当前:
+    st.markdown(f"### {当前['全名']}")
+    st.caption("点上面任意一支口红，这里会马上换成它的试色图")
+    图列 = st.columns(4, gap="large")
+    with 图列[0]:
+        st.image(图片路径(当前["图片"]), use_container_width=True, caption="色号图")
+    with 图列[1]:
+        st.image(试色图路径(当前["色系"], "未涂"), use_container_width=True, caption="未涂")
+    with 图列[2]:
+        st.image(试色图路径(当前["色系"], "涂抹"), use_container_width=True, caption="涂抹中")
+    with 图列[3]:
+        st.image(试色图路径(当前["色系"], "涂好"), use_container_width=True, caption="涂好")
+    st.markdown(
+        f'<div class="swatch" style="background:{当前["色卡"]}; width:160px;"></div>',
+        unsafe_allow_html=True,
+    )
+    st.write(f"{当前['色系']} · {当前['妆效']} · ¥{当前['价格']}")
+    st.caption(当前["说明"])
+
 st.markdown("### 为这支找平替")
 查询方式 = st.radio("怎么查？", ["从上面全库点选", "自己输入名字"], horizontal=True)
 
@@ -311,24 +394,10 @@ with c2:
 
 只看更便宜 = st.checkbox("只看不超过预算的平替", value=True)
 
-当前 = 按id查找(st.session_state["选中id"])
 目标口红 = ""
 if 查询方式 == "从上面全库点选":
-    目标口红 = 当前["全名"]
-    a, b, c = st.columns(3, gap="large")
-    with a:
-        st.image(试色图路径(当前["色系"], "未涂"), use_container_width=True, caption="未涂")
-    with b:
-        st.image(试色图路径(当前["色系"], "涂抹"), use_container_width=True, caption="涂抹中")
-    with c:
-        st.image(试色图路径(当前["色系"], "涂好"), use_container_width=True, caption="涂好")
-    st.markdown(f"#### {当前['全名']}")
-    st.markdown(
-        f'<div class="swatch" style="background:{当前["色卡"]}; width:160px;"></div>',
-        unsafe_allow_html=True,
-    )
-    st.write(f"{当前['色系']} · {当前['妆效']} · ¥{当前['价格']}")
-    st.caption(当前["说明"])
+    目标口红 = 当前["全名"] if 当前 else ""
+    st.caption(f"当前：{目标口红}")
 else:
     目标口红 = st.text_input("输入口红名字（如：阿玛尼 红管 405、迪奥 999）")
 
