@@ -15,8 +15,6 @@ from 口红数据 import 获取口红库
 
 st.set_page_config(page_title="觅色", page_icon="💄", layout="wide")
 
-# 打开最底下「我是站长」时用这个密码看用户留言
-站长密码 = "mise888"
 # 建议箱会发到这个 QQ 邮箱；授权码不要写进代码，写在 邮箱授权码.txt
 收件邮箱 = "2833909485@qq.com"
 
@@ -137,16 +135,6 @@ def 按id查找(口红id):
     return None
 
 
-def 按名字查找(文字):
-    文字 = 文字.strip().lower()
-    命中 = []
-    for 口红 in 口红库:
-        拼 = f"{口红['全名']} {口红['简称']} {口红['色系']}".lower()
-        if 文字 and 文字 in 拼:
-            命中.append(口红)
-    return 命中
-
-
 def 找平替(当前, 预算, 妆效偏好, 只看更便宜):
     结果 = []
     for 口红 in 口红库:
@@ -209,7 +197,7 @@ def 收下建议(内容):
     发出去, _说明 = 发到QQ邮箱(一条)
     if 发出去:
         return True, "收到啦，已经发到站长的QQ邮箱。"
-    return True, "收到啦，已记在网页里。邮箱还没接通的话，站长可在最底下查看。"
+    return True, "收到啦，已记下。邮箱稍后会再试着发过去。"
 
 
 def 画出建议箱():
@@ -234,34 +222,10 @@ def 画出建议箱():
         st.success(st.session_state.pop("建议结果"))
 
 
-def 画出站长信箱():
-    with st.expander("我是站长，查看用户留言 / 开通QQ邮箱"):
-        密码 = st.text_input("查看密码", type="password", key="owner_pw")
-        if 密码 == 站长密码:
-            if not 取QQ授权码():
-                st.warning("QQ邮箱还没接通。按下面做一次，之后用户留言会发到你的QQ邮箱。")
-                st.markdown(
-                    """
-1. 电脑打开 [QQ邮箱](https://mail.qq.com) 并登录  
-2. 点 **设置 → 账户**  
-3. 找到 **POP3/SMTP服务**，点开启  
-4. 按提示发短信，得到一串 **授权码**（不是QQ密码）  
-5. 把授权码单独一行写进本文件夹的 `邮箱授权码.txt`  
-6. 关掉本地网页再重新运行 `streamlit run 口红平替工具.py`  
-7. 网上版还要在 Streamlit 的 Secrets 里加：`qq_auth_code = "授权码"`
-                    """
-                )
-            else:
-                st.success(f"QQ邮箱已接通，留言会发到 {收件邮箱}")
-            列表 = 全局建议()
-            st.caption(f"本页暂存 {len(列表)} 条")
-            if not 列表:
-                st.info("还没有人留言。先自己在上面的建议箱试投一条。")
-            else:
-                for 一条 in reversed(列表):
-                    st.write(一条)
-        elif 密码:
-            st.error("密码不对")
+def 跳到介绍(口红id):
+    st.session_state["选中id"] = 口红id
+    st.session_state["页面"] = "介绍"
+    st.rerun()
 
 
 def 展示卡片(列表):
@@ -281,92 +245,16 @@ def 展示卡片(列表):
                 st.caption(f"{口红['色系']}  ·  {口红['妆效']}")
                 st.markdown(f'<div class="price">¥ {口红["价格"]}</div>', unsafe_allow_html=True)
                 st.markdown(f'<div class="meta">{口红["说明"]}</div>', unsafe_allow_html=True)
+                if st.button("查看介绍", key=f"card_{口红['id']}", use_container_width=True):
+                    跳到介绍(口红["id"])
 
 
-# ---------- 顶部海报 ----------
-st.image(图片路径("banner.png"), use_container_width=True)
-st.markdown('<div class="hero-title">觅色</div>', unsafe_allow_html=True)
-st.markdown(
-    f'<div class="hero-caption">全库 {len(口红库)} 支 · 点一支，遇见同色平替</div>',
-    unsafe_allow_html=True,
-)
-
-st.markdown("### 先学怎么涂")
-教学步骤 = [
-    ("01.png", "1. 打底保湿", "先涂薄薄一层润唇膏"),
-    ("02.png", "2. 勾勒唇峰", "从唇峰两点开始画轮廓"),
-    ("03.png", "3. 填满上唇", "沿着唇线往中间填色"),
-    ("04.png", "4. 填满下唇", "从下唇中央向外推开"),
-    ("05.png", "5. 抿匀修角", "轻轻抿一下，修齐嘴角"),
-    ("06.png", "6. 完成", "左右对称就可以出门了"),
-]
-教学目录 = 图片目录 / "口红教学"
-for 起始 in range(0, len(教学步骤), 3):
-    列 = st.columns(3, gap="large")
-    for i, (文件, 标题, 说明) in enumerate(教学步骤[起始:起始 + 3]):
-        with 列[i]:
-            图 = 教学目录 / 文件
-            if 图.exists():
-                st.image(str(图), use_container_width=True)
-            st.markdown(f"**{标题}**")
-            st.caption(说明)
-st.caption("对照每张图做一遍，就不会花、不会歪。")
-
-# ---------- 全库筛选 ----------
-st.subheader("口红全库")
-品牌列表 = ["全部品牌"] + sorted({x["品牌"] for x in 口红库})
-色系列表 = ["全部色系"] + sorted({x["色系"] for x in 口红库})
-
-f1, f2, f3 = st.columns([2, 1, 1])
-with f1:
-    搜索词 = st.text_input("搜索口红（品牌 / 色号 / 色系）", placeholder="例如：405、Chili、豆沙、完美日记")
-with f2:
-    选中品牌 = st.selectbox("品牌", 品牌列表)
-with f3:
-    选中色系 = st.selectbox("色系", 色系列表)
-
-展示列表 = []
-for 口红 in 口红库:
-    if 选中品牌 != "全部品牌" and 口红["品牌"] != 选中品牌:
-        continue
-    if 选中色系 != "全部色系" and 口红["色系"] != 选中色系:
-        continue
-    if 搜索词.strip():
-        拼 = f"{口红['全名']} {口红['色系']} {口红['说明']}"
-        if 搜索词.strip().lower() not in 拼.lower():
-            continue
-    展示列表.append(口红)
-
-st.markdown(
-    f'<div class="count">当前显示 {len(展示列表)} / {len(口红库)} 支，点击下方色号即可选中</div>',
-    unsafe_allow_html=True,
-)
-if 搜索词.strip() and not 展示列表:
-    st.info("全库暂时没有这个关键词，可以把色号写到最下面的建议箱。")
-
-if "选中id" not in st.session_state:
-    st.session_state["选中id"] = 口红库[0]["id"]
-
-每行 = 6
-for 起始 in range(0, len(展示列表), 每行):
-    一行 = 展示列表[起始:起始 + 每行]
-    列 = st.columns(每行)
-    for i, 口红 in enumerate(一行):
-        with 列[i]:
-            st.image(图片路径(口红["图片"]), use_container_width=True)
-            st.markdown(
-                f'<div class="swatch" style="background:{口红["色卡"]};"></div>',
-                unsafe_allow_html=True,
-            )
-            if st.button(口红["简称"], key=f"pick_{口红['id']}", use_container_width=True):
-                st.session_state["选中id"] = 口红["id"]
-                st.session_state["刚点口红"] = True
-                st.rerun()
-
-当前 = 按id查找(st.session_state["选中id"])
-if 当前:
+def 画出口红介绍(当前):
+    if st.button("← 返回全库"):
+        st.session_state["页面"] = "全库"
+        st.rerun()
     st.markdown(f"### {当前['全名']}")
-    st.caption("点上面任意一支口红，这里会马上换成它的试色图")
+    st.caption("这支口红的色号图、试色和同色平替")
     图列 = st.columns(4, gap="large")
     with 图列[0]:
         st.image(图片路径(当前["图片"]), use_container_width=True, caption="色号图")
@@ -380,50 +268,111 @@ if 当前:
         f'<div class="swatch" style="background:{当前["色卡"]}; width:160px;"></div>',
         unsafe_allow_html=True,
     )
-    st.write(f"{当前['色系']} · {当前['妆效']} · ¥{当前['价格']}")
-    st.caption(当前["说明"])
+    st.write(f"{当前['品牌']} · {当前['名称']} · {当前['色号']}")
+    st.write(f"{当前['色系']} · {当前['妆效']}")
+    st.markdown(f'<div class="price">¥ {当前["价格"]}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="meta">{当前["说明"]}</div>', unsafe_allow_html=True)
 
-st.markdown("### 为这支找平替")
-查询方式 = st.radio("怎么查？", ["从上面全库点选", "自己输入名字"], horizontal=True)
-
-c1, c2 = st.columns(2)
-with c1:
-    预算 = st.slider("最高预算（元）", min_value=30, max_value=500, value=150, step=10)
-with c2:
-    妆效偏好 = st.selectbox("妆效", ["不限", "哑光/雾面", "丝绒", "润泽/水光"])
-
-只看更便宜 = st.checkbox("只看不超过预算的平替", value=True)
-
-目标口红 = ""
-if 查询方式 == "从上面全库点选":
-    目标口红 = 当前["全名"] if 当前 else ""
-    st.caption(f"当前：{目标口红}")
-else:
-    目标口红 = st.text_input("输入口红名字（如：阿玛尼 红管 405、迪奥 999）")
-
-if st.button("查找平替", type="primary"):
-    if not str(目标口红).strip():
-        st.warning("请先在全库点一支，或输入口红名字")
+    st.markdown("### 同色系平替")
+    c1, c2 = st.columns(2)
+    with c1:
+        预算 = st.slider("最高预算（元）", min_value=30, max_value=500, value=150, step=10)
+    with c2:
+        妆效偏好 = st.selectbox("妆效", ["不限", "哑光/雾面", "丝绒", "润泽/水光"])
+    只看更便宜 = st.checkbox("只看不超过预算的平替", value=True)
+    平替们 = 找平替(当前, 预算, 妆效偏好, 只看更便宜)
+    if 平替们:
+        st.caption(f"找到 {len(平替们)} 支和「{当前['全名']}」同色系的平替，点卡片可看介绍")
+        展示卡片(平替们)
     else:
-        if 查询方式 == "从上面全库点选":
-            基准 = 当前
-        else:
-            名字命中 = 按名字查找(目标口红)
-            基准 = 名字命中[0] if 名字命中 else None
+        st.info("这支暂时没有合适平替，可以把需求写到最下面的建议箱。")
 
-        if 基准:
-            平替们 = 找平替(基准, 预算, 妆效偏好, 只看更便宜)
-            st.markdown(f"### 「{基准['全名']}」的同色系平替（{基准['色系']}）")
-            展示卡片(平替们)
-            if not 平替们:
-                st.info("这支暂时没有合适平替，可以把需求写到最下面的建议箱。")
-        else:
-            st.info("全库暂时没有这支口红，请写到最下面的建议箱，我们后面补进去。")
 
+# ---------- 顶部海报 ----------
+st.image(图片路径("banner.png"), use_container_width=True)
+st.markdown('<div class="hero-title">觅色</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="hint">点开任意口红可看真人试色对比图。全库覆盖常见大牌和平价热门色。没收录的名字可以投进最下面的建议箱。屏幕有色差，下手前请对照试色。</div>',
+    f'<div class="hero-caption">全库 {len(口红库)} 支 · 点一支，遇见同色平替</div>',
     unsafe_allow_html=True,
 )
 
+if st.session_state.get("页面") == "介绍":
+    当前 = 按id查找(st.session_state.get("选中id"))
+    if 当前:
+        画出口红介绍(当前)
+    else:
+        st.session_state["页面"] = "全库"
+        st.rerun()
+else:
+    st.markdown("### 先学怎么涂")
+    教学步骤 = [
+        ("01.png", "1. 打底保湿", "先涂薄薄一层润唇膏"),
+        ("02.png", "2. 勾勒唇峰", "从唇峰两点开始画轮廓"),
+        ("03.png", "3. 填满上唇", "沿着唇线往中间填色"),
+        ("04.png", "4. 填满下唇", "从下唇中央向外推开"),
+        ("05.png", "5. 抿匀修角", "轻轻抿一下，修齐嘴角"),
+        ("06.png", "6. 完成", "左右对称就可以出门了"),
+    ]
+    教学目录 = 图片目录 / "口红教学"
+    for 起始 in range(0, len(教学步骤), 3):
+        列 = st.columns(3, gap="large")
+        for i, (文件, 标题, 说明) in enumerate(教学步骤[起始:起始 + 3]):
+            with 列[i]:
+                图 = 教学目录 / 文件
+                if 图.exists():
+                    st.image(str(图), use_container_width=True)
+                st.markdown(f"**{标题}**")
+                st.caption(说明)
+    st.caption("对照每张图做一遍，就不会花、不会歪。")
+
+    st.subheader("口红全库")
+    品牌列表 = ["全部品牌"] + sorted({x["品牌"] for x in 口红库})
+    色系列表 = ["全部色系"] + sorted({x["色系"] for x in 口红库})
+
+    f1, f2, f3 = st.columns([2, 1, 1])
+    with f1:
+        搜索词 = st.text_input("搜索口红（品牌 / 色号 / 色系）", placeholder="例如：405、Chili、豆沙、完美日记")
+    with f2:
+        选中品牌 = st.selectbox("品牌", 品牌列表)
+    with f3:
+        选中色系 = st.selectbox("色系", 色系列表)
+
+    展示列表 = []
+    for 口红 in 口红库:
+        if 选中品牌 != "全部品牌" and 口红["品牌"] != 选中品牌:
+            continue
+        if 选中色系 != "全部色系" and 口红["色系"] != 选中色系:
+            continue
+        if 搜索词.strip():
+            拼 = f"{口红['全名']} {口红['色系']} {口红['说明']}"
+            if 搜索词.strip().lower() not in 拼.lower():
+                continue
+        展示列表.append(口红)
+
+    st.markdown(
+        f'<div class="count">当前显示 {len(展示列表)} / {len(口红库)} 支，点击色号查看介绍</div>',
+        unsafe_allow_html=True,
+    )
+    if 搜索词.strip() and not 展示列表:
+        st.info("全库暂时没有这个关键词，可以把色号写到最下面的建议箱。")
+
+    每行 = 6
+    for 起始 in range(0, len(展示列表), 每行):
+        一行 = 展示列表[起始:起始 + 每行]
+        列 = st.columns(每行)
+        for i, 口红 in enumerate(一行):
+            with 列[i]:
+                st.image(图片路径(口红["图片"]), use_container_width=True)
+                st.markdown(
+                    f'<div class="swatch" style="background:{口红["色卡"]};"></div>',
+                    unsafe_allow_html=True,
+                )
+                if st.button(口红["简称"], key=f"pick_{口红['id']}", use_container_width=True):
+                    跳到介绍(口红["id"])
+
+    st.markdown(
+        '<div class="hint">点开任意口红可看介绍和真人试色。全库覆盖常见大牌和平价热门色。没收录的名字可以投进最下面的建议箱。屏幕有色差，下手前请对照试色。</div>',
+        unsafe_allow_html=True,
+    )
+
 画出建议箱()
-画出站长信箱()
