@@ -15,7 +15,7 @@ from 会员系统 import (
     免费可看支数,
     免费平替条数,
     客服微信,
-    开通会员,
+    校验口令,
     收款码路径,
     月卡价格,
     月卡说明,
@@ -29,6 +29,10 @@ try:
     api_key = st.secrets.get("DEEPSEEK_API_KEY", "") or os.environ.get("DEEPSEEK_API_KEY", "")
 except Exception:
     api_key = os.environ.get("DEEPSEEK_API_KEY", "")
+try:
+    云端口令 = st.secrets.get("unlock_password", "")
+except Exception:
+    云端口令 = ""
 
 图片目录 = Path(__file__).parent / "口红图片"
 口红库 = 获取口红库()
@@ -233,18 +237,23 @@ with st.expander("开通会员，解锁试色对比图 / 教学 / AI 平替", ex
             with 码列:
                 st.image(str(收款码), use_container_width=True, caption="微信 / 支付宝收款码")
             st.markdown(
-                f'<div class="pay-note">打开微信或支付宝，扫上面的码付 ¥{月卡价格}，'
-                "付完回到这里点按钮即可解锁。</div>",
+                f'<div class="pay-note">1. 扫码付 ¥{月卡价格}<br>'
+                f"2. 把付款截图发给微信 <b>{客服微信}</b><br>"
+                "3. 客服确认到账后，把开通口令填在下面</div>",
                 unsafe_allow_html=True,
             )
         else:
             st.warning("还没放收款码。请把微信或支付宝收款码图片保存为 `口红图片/收款码.png`。")
-        if st.button("我已付款，立即解锁", type="primary"):
-            st.session_state["会员"] = 开通会员()
-            st.rerun()
-        st.caption(
-            f"免费可看 12 支口红和 1 条平替。付款遇到问题可加微信 {客服微信}。"
-        )
+        口令 = st.text_input("开通口令", placeholder="客服确认付款后发给你", type="password")
+        if st.button("解锁会员", type="primary"):
+            成功, 说明, 数据 = 校验口令(口令, 云端口令)
+            if 成功:
+                st.session_state["会员"] = 数据
+                st.success(说明)
+                st.rerun()
+            else:
+                st.error(说明)
+        st.caption("免费可看 12 支口红和 1 条平替。没付款拿不到口令，点按钮也不会开通。")
 
 st.markdown("### 先学怎么涂")
 教学步骤 = [

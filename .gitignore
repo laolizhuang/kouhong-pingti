@@ -5,6 +5,7 @@ __pycache__/
 .env
 config.py
 会员卡密.txt
+开通口令.txt
 会员解锁.json
 .streamlit/secrets.toml
 
