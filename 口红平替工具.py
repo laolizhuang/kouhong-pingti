@@ -1,25 +1,19 @@
 # ============================================
 # 觅色：口红平替查询（全库版：所有口红都能点、能搜）
-# 使用前：把密钥占位符换成你的真实 DeepSeek 密钥（AI 查询才可用）
 # 运行：streamlit run 口红平替工具.py
 # ============================================
 
-import os
+from datetime import datetime
 from pathlib import Path
 
-import requests
 import streamlit as st
 
 from 口红数据 import 获取口红库
 
 st.set_page_config(page_title="觅色", page_icon="💄", layout="wide")
 
-try:
-    api_key = st.secrets.get("DEEPSEEK_API_KEY", "") or os.environ.get("DEEPSEEK_API_KEY", "")
-except Exception:
-    api_key = os.environ.get("DEEPSEEK_API_KEY", "")
-
 图片目录 = Path(__file__).parent / "口红图片"
+建议文件 = Path(__file__).parent / "建议箱.txt"
 口红库 = 获取口红库()
 
 st.markdown(
@@ -155,9 +149,22 @@ def 找平替(当前, 预算, 妆效偏好, 只看更便宜):
     return 结果
 
 
+def 收下建议(内容):
+    内容 = (内容 or "").strip()
+    if not 内容:
+        return False, "请先写下你想找的口红"
+    一行 = f"{datetime.now().strftime('%Y-%m-%d %H:%M')}  {内容}\n"
+    try:
+        with 建议文件.open("a", encoding="utf-8") as f:
+            f.write(一行)
+    except Exception:
+        pass
+    return True, "收到啦，我们会尽量补进全库。"
+
+
 def 展示卡片(列表):
     if not 列表:
-        st.warning("按当前条件没有筛到。试试放宽品牌/色系/预算，或勾选 AI 再查。")
+        st.warning("按当前条件没有筛到。试试放宽品牌、色系或预算，或去下面建议箱留言。")
         return
     for 起始 in range(0, len(列表), 3):
         列 = st.columns(3, gap="large")
@@ -254,16 +261,13 @@ for 起始 in range(0, len(展示列表), 每行):
 st.markdown("### 为这支找平替")
 查询方式 = st.radio("怎么查？", ["从上面全库点选", "自己输入名字"], horizontal=True)
 
-c1, c2, c3 = st.columns(3)
+c1, c2 = st.columns(2)
 with c1:
     预算 = st.slider("最高预算（元）", min_value=30, max_value=500, value=150, step=10)
 with c2:
     妆效偏好 = st.selectbox("妆效", ["不限", "哑光/雾面", "丝绒", "润泽/水光"])
-with c3:
-    肤色 = st.selectbox("肤色", ["不限", "黄皮", "白皮", "自然偏深"])
 
 只看更便宜 = st.checkbox("只看不超过预算的平替", value=True)
-用AI补充 = st.checkbox("本地查完后，再用 AI 多推荐几款", value=False)
 
 当前 = 按id查找(st.session_state["选中id"])
 目标口红 = ""
@@ -286,14 +290,6 @@ if 查询方式 == "从上面全库点选":
 else:
     目标口红 = st.text_input("输入口红名字（如：阿玛尼 红管 405、迪奥 999）")
 
-系统指令 = (
-    "你是美妆顾问，专门帮人找口红平替。"
-    "请根据用户想找的口红、预算、妆效和肤色，推荐 3 款国内容易买到的平价平替。"
-    "每款写清：品牌+名字、色号、大约价格、妆效、为什么像、适合什么肤色。"
-    "只推荐真实常见的国货/平价品牌（如完美日记、INTO YOU、花西子、珂拉琪、橘朵、3CE、美宝莲、卡姿兰、ColorKey）。"
-    "语气真诚，不要夸张，并提醒：屏幕色差存在，最终以试色为准。"
-)
-
 if st.button("查找平替", type="primary"):
     if not str(目标口红).strip():
         st.warning("请先在全库点一支，或输入口红名字")
@@ -308,47 +304,26 @@ if st.button("查找平替", type="primary"):
             平替们 = 找平替(基准, 预算, 妆效偏好, 只看更便宜)
             st.markdown(f"### 「{基准['全名']}」的同色系平替（{基准['色系']}）")
             展示卡片(平替们)
-            筛选后 = 平替们
+            if not 平替们:
+                st.info("这支暂时没有合适平替，可以把你的需求投进下面的建议箱。")
         else:
-            st.info("全库暂时没有完全对上这支名字，下面用 AI 帮你找平替。")
-            筛选后 = []
+            st.info("全库暂时没有这支口红，欢迎投进下面的建议箱，我们后面补进去。")
 
-        需要AI = (not 筛选后) or 用AI补充
-        if 需要AI:
-            if not api_key:
-                st.error("还没设置 DeepSeek 密钥。请在终端先运行：$env:DEEPSEEK_API_KEY='你的密钥'")
-            else:
-                with st.spinner("正在找平替..."):
-                    用户需求 = (
-                        f"目标口红：{目标口红}；预算最高：{预算}元；"
-                        f"妆效偏好：{妆效偏好}；肤色：{肤色}"
-                    )
-                    请求头 = {
-                        "Authorization": f"Bearer {api_key}",
-                        "Content-Type": "application/json",
-                    }
-                    数据 = {
-                        "model": "deepseek-chat",
-                        "messages": [
-                            {"role": "system", "content": 系统指令},
-                            {"role": "user", "content": 用户需求},
-                        ],
-                    }
-                    try:
-                        响应 = requests.post(
-                            "https://api.deepseek.com/chat/completions",
-                            json=数据, headers=请求头, timeout=60
-                        )
-                        结果 = 响应.json()
-                        if 响应.status_code == 200:
-                            st.subheader("AI 平替推荐")
-                            st.write(结果["choices"][0]["message"]["content"])
-                        else:
-                            st.error(f"出错了：{结果}")
-                    except Exception as e:
-                        st.error(f"请求出错：{e}")
+st.markdown("### 建议箱")
+st.caption("上面没有你要的色号？写在这里就行。")
+常驻建议 = st.text_area(
+    "留言",
+    placeholder="例如：希望增加 YSL 小金条 21、香奈儿 58",
+    key="always_suggestion",
+)
+if st.button("提交建议"):
+    成功, 说明 = 收下建议(常驻建议)
+    if 成功:
+        st.success(说明)
+    else:
+        st.warning(说明)
 
 st.markdown(
-    '<div class="hint">点开任意口红可看真人试色对比图。全库覆盖常见大牌和平价热门色。没收录的名字可以自己输入，用 AI 补查。屏幕有色差，下手前请对照试色。</div>',
+    '<div class="hint">点开任意口红可看真人试色对比图。全库覆盖常见大牌和平价热门色。没收录的名字可以投进建议箱。屏幕有色差，下手前请对照试色。</div>',
     unsafe_allow_html=True,
 )
