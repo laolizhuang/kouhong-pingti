@@ -6,11 +6,15 @@
 from datetime import datetime
 from pathlib import Path
 
+import requests
 import streamlit as st
 
 from 口红数据 import 获取口红库
 
 st.set_page_config(page_title="觅色", page_icon="💄", layout="wide")
+
+# 用户投进建议箱的内容，会发到这个邮箱
+收件邮箱 = "2833909485@qq.com"
 
 图片目录 = Path(__file__).parent / "口红图片"
 建议文件 = Path(__file__).parent / "建议箱.txt"
@@ -159,7 +163,23 @@ def 收下建议(内容):
             f.write(一行)
     except Exception:
         pass
-    return True, "收到啦，我们会尽量补进全库。"
+    try:
+        响应 = requests.post(
+            f"https://formsubmit.co/ajax/{收件邮箱}",
+            json={
+                "name": "觅色建议箱",
+                "message": 内容,
+                "_subject": "【觅色】有人投了建议箱",
+                "_captcha": "false",
+            },
+            headers={"Accept": "application/json"},
+            timeout=20,
+        )
+        if 响应.ok:
+            return True, "收到啦，已经发到站长邮箱，我们会尽量补进全库。"
+    except Exception:
+        pass
+    return True, "先记下来了。如果邮箱还没收到，请到垃圾箱里点一次确认邮件。"
 
 
 def 画出建议箱():
@@ -204,8 +224,6 @@ st.markdown(
     f'<div class="hero-caption">全库 {len(口红库)} 支 · 点一支，遇见同色平替</div>',
     unsafe_allow_html=True,
 )
-
-画出建议箱()
 
 st.markdown("### 先学怎么涂")
 教学步骤 = [
@@ -258,7 +276,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 if 搜索词.strip() and not 展示列表:
-    st.info("全库暂时没有这个关键词，可以把色号写到上面的建议箱。")
+    st.info("全库暂时没有这个关键词，可以把色号写到最下面的建议箱。")
 
 if "选中id" not in st.session_state:
     st.session_state["选中id"] = 口红库[0]["id"]
@@ -325,11 +343,13 @@ if st.button("查找平替", type="primary"):
             st.markdown(f"### 「{基准['全名']}」的同色系平替（{基准['色系']}）")
             展示卡片(平替们)
             if not 平替们:
-                st.info("这支暂时没有合适平替，可以把需求写到页面上方的建议箱。")
+                st.info("这支暂时没有合适平替，可以把需求写到最下面的建议箱。")
         else:
-            st.info("全库暂时没有这支口红，请写到页面上方的建议箱，我们后面补进去。")
+            st.info("全库暂时没有这支口红，请写到最下面的建议箱，我们后面补进去。")
 
 st.markdown(
-    '<div class="hint">点开任意口红可看真人试色对比图。全库覆盖常见大牌和平价热门色。没收录的名字可以投进建议箱。屏幕有色差，下手前请对照试色。</div>',
+    '<div class="hint">点开任意口红可看真人试色对比图。全库覆盖常见大牌和平价热门色。没收录的名字可以投进最下面的建议箱。屏幕有色差，下手前请对照试色。</div>',
     unsafe_allow_html=True,
 )
+
+画出建议箱()
