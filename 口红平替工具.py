@@ -162,6 +162,22 @@ def 收下建议(内容):
     return True, "收到啦，我们会尽量补进全库。"
 
 
+def 画出建议箱():
+    st.markdown("### 建议箱")
+    st.caption("全库没有你要的色号？写在这里，我们后面补进去。")
+    内容 = st.text_area(
+        "你想找的口红",
+        placeholder="例如：YSL 小金条 21、香奈儿 58、某支豆沙色",
+        key="suggestion_box",
+    )
+    if st.button("投进建议箱", type="primary"):
+        成功, 说明 = 收下建议(内容)
+        if 成功:
+            st.success(说明)
+        else:
+            st.warning(说明)
+
+
 def 展示卡片(列表):
     if not 列表:
         st.warning("按当前条件没有筛到。试试放宽品牌、色系或预算，或去下面建议箱留言。")
@@ -188,6 +204,8 @@ st.markdown(
     f'<div class="hero-caption">全库 {len(口红库)} 支 · 点一支，遇见同色平替</div>',
     unsafe_allow_html=True,
 )
+
+画出建议箱()
 
 st.markdown("### 先学怎么涂")
 教学步骤 = [
@@ -239,6 +257,8 @@ st.markdown(
     f'<div class="count">当前显示 {len(展示列表)} / {len(口红库)} 支，点击下方色号即可选中</div>',
     unsafe_allow_html=True,
 )
+if 搜索词.strip() and not 展示列表:
+    st.info("全库暂时没有这个关键词，可以把色号写到上面的建议箱。")
 
 if "选中id" not in st.session_state:
     st.session_state["选中id"] = 口红库[0]["id"]
@@ -305,23 +325,9 @@ if st.button("查找平替", type="primary"):
             st.markdown(f"### 「{基准['全名']}」的同色系平替（{基准['色系']}）")
             展示卡片(平替们)
             if not 平替们:
-                st.info("这支暂时没有合适平替，可以把你的需求投进下面的建议箱。")
+                st.info("这支暂时没有合适平替，可以把需求写到页面上方的建议箱。")
         else:
-            st.info("全库暂时没有这支口红，欢迎投进下面的建议箱，我们后面补进去。")
-
-st.markdown("### 建议箱")
-st.caption("上面没有你要的色号？写在这里就行。")
-常驻建议 = st.text_area(
-    "留言",
-    placeholder="例如：希望增加 YSL 小金条 21、香奈儿 58",
-    key="always_suggestion",
-)
-if st.button("提交建议"):
-    成功, 说明 = 收下建议(常驻建议)
-    if 成功:
-        st.success(说明)
-    else:
-        st.warning(说明)
+            st.info("全库暂时没有这支口红，请写到页面上方的建议箱，我们后面补进去。")
 
 st.markdown(
     '<div class="hint">点开任意口红可看真人试色对比图。全库覆盖常见大牌和平价热门色。没收录的名字可以投进建议箱。屏幕有色差，下手前请对照试色。</div>',
