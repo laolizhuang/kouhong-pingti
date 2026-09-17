@@ -274,8 +274,6 @@ def 画出口红介绍(当前):
     if st.button("← 返回全库"):
         st.session_state["页面"] = "全库"
         st.rerun()
-    画出平替(当前)
-    st.markdown("---")
     st.markdown(f"### {当前['全名']}")
     st.caption("色号图、试色，以及这支口红的真实上嘴情况")
     图列 = st.columns(4, gap="large")
@@ -296,6 +294,8 @@ def 画出口红介绍(当前):
         f"{当前['色系']} · {当前['妆效']}　｜　参考价 ¥{当前['价格']}"
     )
     st.markdown(f'<div class="intro">{当前["介绍"]}</div>', unsafe_allow_html=True)
+    st.markdown("---")
+    画出平替(当前)
 
 
 if st.session_state.get("页面") == "介绍":
