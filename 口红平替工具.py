@@ -6,19 +6,23 @@
 from datetime import datetime
 from pathlib import Path
 
-import requests
 import streamlit as st
 
 from 口红数据 import 获取口红库
 
 st.set_page_config(page_title="觅色", page_icon="💄", layout="wide")
 
-# 用户投进建议箱的内容，会发到这个邮箱
-收件邮箱 = "2833909485@qq.com"
+# 打开最底下「我是站长」时用这个密码看用户留言
+站长密码 = "mise888"
 
 图片目录 = Path(__file__).parent / "口红图片"
 建议文件 = Path(__file__).parent / "建议箱.txt"
 口红库 = 获取口红库()
+
+
+@st.cache_resource
+def 全局建议():
+    return []
 
 st.markdown(
     """
@@ -157,29 +161,14 @@ def 收下建议(内容):
     内容 = (内容 or "").strip()
     if not 内容:
         return False, "请先写下你想找的口红"
-    一行 = f"{datetime.now().strftime('%Y-%m-%d %H:%M')}  {内容}\n"
+    一条 = f"{datetime.now().strftime('%Y-%m-%d %H:%M')}  {内容}"
+    全局建议().append(一条)
     try:
         with 建议文件.open("a", encoding="utf-8") as f:
-            f.write(一行)
+            f.write(一条 + "\n")
     except Exception:
         pass
-    try:
-        响应 = requests.post(
-            f"https://formsubmit.co/ajax/{收件邮箱}",
-            json={
-                "name": "觅色建议箱",
-                "message": 内容,
-                "_subject": "【觅色】有人投了建议箱",
-                "_captcha": "false",
-            },
-            headers={"Accept": "application/json"},
-            timeout=20,
-        )
-        if 响应.ok:
-            return True, "收到啦，已经发到站长邮箱，我们会尽量补进全库。"
-    except Exception:
-        pass
-    return True, "先记下来了。如果邮箱还没收到，请到垃圾箱里点一次确认邮件。"
+    return True, "收到啦，我们会尽量补进全库。"
 
 
 def 画出建议箱():
@@ -196,6 +185,21 @@ def 画出建议箱():
             st.success(说明)
         else:
             st.warning(说明)
+
+
+def 画出站长信箱():
+    with st.expander("我是站长，查看用户留言"):
+        密码 = st.text_input("查看密码", type="password", key="owner_pw")
+        if 密码 == 站长密码:
+            列表 = 全局建议()
+            st.caption(f"共 {len(列表)} 条")
+            if not 列表:
+                st.info("还没有人留言。先自己在上面的建议箱试投一条，再回到这里查看。")
+            else:
+                for 一条 in reversed(列表):
+                    st.write(一条)
+        elif 密码:
+            st.error("密码不对")
 
 
 def 展示卡片(列表):
@@ -353,3 +357,4 @@ st.markdown(
 )
 
 画出建议箱()
+画出站长信箱()
