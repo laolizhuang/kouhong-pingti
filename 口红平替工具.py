@@ -76,7 +76,12 @@ st.markdown(
         font-size: 1.15rem;
     }
     .meta { color: #8a6a6a; font-size: 0.9rem; }
-    .hint { color: #9a7a7a; font-size: 0.82rem; text-align: center; margin-top: 28px; }
+    .intro {
+        line-height: 1.9;
+        color: #5a3a3a;
+        font-size: 0.98rem;
+        margin: 8px 0 16px 0;
+    }
     .count {
         text-align: center;
         color: #8a5a5a;
@@ -222,9 +227,8 @@ def 画出建议箱():
         st.success(st.session_state.pop("建议结果"))
 
 
-def 跳到介绍(口红id):
+def 选中口红(口红id):
     st.session_state["选中id"] = 口红id
-    st.session_state["页面"] = "介绍"
     st.rerun()
 
 
@@ -246,15 +250,13 @@ def 展示卡片(列表):
                 st.markdown(f'<div class="price">¥ {口红["价格"]}</div>', unsafe_allow_html=True)
                 st.markdown(f'<div class="meta">{口红["说明"]}</div>', unsafe_allow_html=True)
                 if st.button("查看介绍", key=f"card_{口红['id']}", use_container_width=True):
-                    跳到介绍(口红["id"])
+                    选中口红(口红["id"])
 
 
 def 画出口红介绍(当前):
-    if st.button("← 返回全库"):
-        st.session_state["页面"] = "全库"
-        st.rerun()
+    st.markdown("---")
     st.markdown(f"### {当前['全名']}")
-    st.caption("这支口红的色号图、试色和同色平替")
+    st.caption("色号图、试色，以及这支口红的真实上嘴情况")
     图列 = st.columns(4, gap="large")
     with 图列[0]:
         st.image(图片路径(当前["图片"]), use_container_width=True, caption="色号图")
@@ -268,10 +270,11 @@ def 画出口红介绍(当前):
         f'<div class="swatch" style="background:{当前["色卡"]}; width:160px;"></div>',
         unsafe_allow_html=True,
     )
-    st.write(f"{当前['品牌']} · {当前['名称']} · {当前['色号']}")
-    st.write(f"{当前['色系']} · {当前['妆效']}")
-    st.markdown(f'<div class="price">¥ {当前["价格"]}</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="meta">{当前["说明"]}</div>', unsafe_allow_html=True)
+    st.write(
+        f"{当前['品牌']} · {当前['名称']} · {当前['色号']}　｜　"
+        f"{当前['色系']} · {当前['妆效']}　｜　参考价 ¥{当前['价格']}"
+    )
+    st.markdown(f'<div class="intro">{当前["介绍"]}</div>', unsafe_allow_html=True)
 
     st.markdown("### 同色系平替")
     c1, c2 = st.columns(2)
@@ -282,7 +285,7 @@ def 画出口红介绍(当前):
     只看更便宜 = st.checkbox("只看不超过预算的平替", value=True)
     平替们 = 找平替(当前, 预算, 妆效偏好, 只看更便宜)
     if 平替们:
-        st.caption(f"找到 {len(平替们)} 支和「{当前['全名']}」同色系的平替，点卡片可看介绍")
+        st.caption(f"找到 {len(平替们)} 支和「{当前['全名']}」同色系的平替，点卡片可换到下面看介绍")
         展示卡片(平替们)
     else:
         st.info("这支暂时没有合适平替，可以把需求写到最下面的建议箱。")
@@ -292,87 +295,83 @@ def 画出口红介绍(当前):
 st.image(图片路径("banner.png"), use_container_width=True)
 st.markdown('<div class="hero-title">觅色</div>', unsafe_allow_html=True)
 st.markdown(
-    f'<div class="hero-caption">全库 {len(口红库)} 支 · 点一支，遇见同色平替</div>',
+    f'<div class="hero-caption">全库 {len(口红库)} 支 · 点一支，在下方看介绍</div>',
     unsafe_allow_html=True,
 )
 
-if st.session_state.get("页面") == "介绍":
-    当前 = 按id查找(st.session_state.get("选中id"))
-    if 当前:
-        画出口红介绍(当前)
-    else:
-        st.session_state["页面"] = "全库"
-        st.rerun()
-else:
-    st.markdown("### 先学怎么涂")
-    教学步骤 = [
-        ("01.png", "1. 打底保湿", "先涂薄薄一层润唇膏"),
-        ("02.png", "2. 勾勒唇峰", "从唇峰两点开始画轮廓"),
-        ("03.png", "3. 填满上唇", "沿着唇线往中间填色"),
-        ("04.png", "4. 填满下唇", "从下唇中央向外推开"),
-        ("05.png", "5. 抿匀修角", "轻轻抿一下，修齐嘴角"),
-        ("06.png", "6. 完成", "左右对称就可以出门了"),
-    ]
-    教学目录 = 图片目录 / "口红教学"
-    for 起始 in range(0, len(教学步骤), 3):
-        列 = st.columns(3, gap="large")
-        for i, (文件, 标题, 说明) in enumerate(教学步骤[起始:起始 + 3]):
-            with 列[i]:
-                图 = 教学目录 / 文件
-                if 图.exists():
-                    st.image(str(图), use_container_width=True)
-                st.markdown(f"**{标题}**")
-                st.caption(说明)
-    st.caption("对照每张图做一遍，就不会花、不会歪。")
+st.markdown("### 先学怎么涂")
+教学步骤 = [
+    ("01.png", "1. 打底保湿", "先涂薄薄一层润唇膏"),
+    ("02.png", "2. 勾勒唇峰", "从唇峰两点开始画轮廓"),
+    ("03.png", "3. 填满上唇", "沿着唇线往中间填色"),
+    ("04.png", "4. 填满下唇", "从下唇中央向外推开"),
+    ("05.png", "5. 抿匀修角", "轻轻抿一下，修齐嘴角"),
+    ("06.png", "6. 完成", "左右对称就可以出门了"),
+]
+教学目录 = 图片目录 / "口红教学"
+for 起始 in range(0, len(教学步骤), 3):
+    列 = st.columns(3, gap="large")
+    for i, (文件, 标题, 说明) in enumerate(教学步骤[起始:起始 + 3]):
+        with 列[i]:
+            图 = 教学目录 / 文件
+            if 图.exists():
+                st.image(str(图), use_container_width=True)
+            st.markdown(f"**{标题}**")
+            st.caption(说明)
+st.caption("对照每张图做一遍，就不会花、不会歪。")
 
-    st.subheader("口红全库")
-    品牌列表 = ["全部品牌"] + sorted({x["品牌"] for x in 口红库})
-    色系列表 = ["全部色系"] + sorted({x["色系"] for x in 口红库})
+st.subheader("口红全库")
+品牌列表 = ["全部品牌"] + sorted({x["品牌"] for x in 口红库})
+色系列表 = ["全部色系"] + sorted({x["色系"] for x in 口红库})
 
-    f1, f2, f3 = st.columns([2, 1, 1])
-    with f1:
-        搜索词 = st.text_input("搜索口红（品牌 / 色号 / 色系）", placeholder="例如：405、Chili、豆沙、完美日记")
-    with f2:
-        选中品牌 = st.selectbox("品牌", 品牌列表)
-    with f3:
-        选中色系 = st.selectbox("色系", 色系列表)
+f1, f2, f3 = st.columns([2, 1, 1])
+with f1:
+    搜索词 = st.text_input("搜索口红（品牌 / 色号 / 色系）", placeholder="例如：405、Chili、豆沙、完美日记")
+with f2:
+    选中品牌 = st.selectbox("品牌", 品牌列表)
+with f3:
+    选中色系 = st.selectbox("色系", 色系列表)
 
-    展示列表 = []
-    for 口红 in 口红库:
-        if 选中品牌 != "全部品牌" and 口红["品牌"] != 选中品牌:
+展示列表 = []
+for 口红 in 口红库:
+    if 选中品牌 != "全部品牌" and 口红["品牌"] != 选中品牌:
+        continue
+    if 选中色系 != "全部色系" and 口红["色系"] != 选中色系:
+        continue
+    if 搜索词.strip():
+        拼 = f"{口红['全名']} {口红['色系']} {口红['说明']}"
+        if 搜索词.strip().lower() not in 拼.lower():
             continue
-        if 选中色系 != "全部色系" and 口红["色系"] != 选中色系:
-            continue
-        if 搜索词.strip():
-            拼 = f"{口红['全名']} {口红['色系']} {口红['说明']}"
-            if 搜索词.strip().lower() not in 拼.lower():
-                continue
-        展示列表.append(口红)
+    展示列表.append(口红)
 
-    st.markdown(
-        f'<div class="count">当前显示 {len(展示列表)} / {len(口红库)} 支，点击色号查看介绍</div>',
-        unsafe_allow_html=True,
-    )
-    if 搜索词.strip() and not 展示列表:
-        st.info("全库暂时没有这个关键词，可以把色号写到最下面的建议箱。")
+st.markdown(
+    f'<div class="count">当前显示 {len(展示列表)} / {len(口红库)} 支，点击色号后介绍出现在下面</div>',
+    unsafe_allow_html=True,
+)
+if 搜索词.strip() and not 展示列表:
+    st.info("全库暂时没有这个关键词，可以把色号写到最下面的建议箱。")
 
-    每行 = 6
-    for 起始 in range(0, len(展示列表), 每行):
-        一行 = 展示列表[起始:起始 + 每行]
-        列 = st.columns(每行)
-        for i, 口红 in enumerate(一行):
-            with 列[i]:
-                st.image(图片路径(口红["图片"]), use_container_width=True)
-                st.markdown(
-                    f'<div class="swatch" style="background:{口红["色卡"]};"></div>',
-                    unsafe_allow_html=True,
-                )
-                if st.button(口红["简称"], key=f"pick_{口红['id']}", use_container_width=True):
-                    跳到介绍(口红["id"])
+每行 = 6
+for 起始 in range(0, len(展示列表), 每行):
+    一行 = 展示列表[起始:起始 + 每行]
+    列 = st.columns(每行)
+    for i, 口红 in enumerate(一行):
+        with 列[i]:
+            st.image(图片路径(口红["图片"]), use_container_width=True)
+            st.markdown(
+                f'<div class="swatch" style="background:{口红["色卡"]};"></div>',
+                unsafe_allow_html=True,
+            )
+            if st.button(口红["简称"], key=f"pick_{口红['id']}", use_container_width=True):
+                选中口红(口红["id"])
 
-    st.markdown(
-        '<div class="hint">点开任意口红可看介绍和真人试色。全库覆盖常见大牌和平价热门色。没收录的名字可以投进最下面的建议箱。屏幕有色差，下手前请对照试色。</div>',
-        unsafe_allow_html=True,
-    )
+st.markdown(
+    '<div class="hint">点开任意口红，介绍和试色会出现在全库下面。屏幕有色差，下手前请对照试色。没收录的名字可以投进最下面的建议箱。</div>',
+    unsafe_allow_html=True,
+)
+
+当前 = 按id查找(st.session_state.get("选中id"))
+if 当前:
+    画出口红介绍(当前)
 
 画出建议箱()
