@@ -1,19 +1,27 @@
 # 觅色
 
-免费查询口红平替。全库没有的色号可以投进页面最下面的建议箱。介绍页有「去购买」（广告）。
+免费查询口红平替。介绍页「去购买」是联盟广告：核对过色号才收录，优先淘宝，其次京东、拼多多、唯品会。
 
-介绍页「去购买」已接联盟广告。库里只留核对过色号、能走佣金的：优先淘宝，其次京东、拼多多、唯品会。全库没有的色号可以投建议箱。
+## 网页（推荐，打开更快）
 
-用户留言会发到 QQ 邮箱。需要先在 QQ 邮箱开启 SMTP，把授权码写进 `邮箱授权码.txt`。
+线上：https://laolizhuang.github.io/kouhong-pingti/
 
-## 本地运行
+改完口红数据后，在本机运行 `python 生成网页数据.py`，再把 `kouhong.json` 一起提交。
+
+本地预览：
+
+```bash
+python 生成网页数据.py
+python -m http.server 8080
+```
+
+浏览器打开 http://127.0.0.1:8080/
+
+建议箱会打开访客的邮箱，发到站长 QQ 邮箱。
+
+## Streamlit 版（旧）
 
 ```bash
 pip install -r requirements.txt
 streamlit run 口红平替工具.py
 ```
-
-## 上网部署（Streamlit Cloud）
-
-主文件填：`口红平替工具.py`  
-Secrets 里加上：`qq_auth_code = "你的授权码"`
