@@ -127,3 +127,9 @@
     ('阿玛尼', '红管唇釉', '201'): 'https://union-click.jd.com/jdc?e=618%7Cpc%7C&p=JF8BAb4JK1olWAUEUl5cDEIfCl8IGlsUWw4BVV9dCk8VC19MRANLAjZbERscSkAJHS5LRURJQl1XSwwDVFVLUzJVBQtHGF5FAEBYDAxxWh9UEw5lX14KUysDaBliZDUMXQlKOmNQSgYCXR9eHDZNRwYbH1xGWB4cDQ5famZJYyxtNUNnBho2bjBvayptXlh3KAYGUTBfczF1ShkJRhtONERbAxgOdksARzBQRQRIDVlXMRYcXEcXFDNYQwR3B0IOVF9dCU0fAG4JG1kRXw4yMyArAA5ccCloZxtiVUddCTYLWjRFY2MEK1olXgcAXVpbAEwXC184G1wlDWgKXFZdC0IRA28KG2sUbQYEXVZbCU4TBmkIHV8lWgYLZAQGZjl0dwxYbTBlO2Z8M25tOEgnBG8BD11nHFQWUixtOEgRM2w4G1oVXAICU1tdCEgLA2sMHVkRQQYEXVZbCU4TBm0ME1slXwcDUFdtOJWasxwKGStpKV9WFBYWYR1TcSnWlusEL3YCUFlZGXtXQmpNUzIcHH51LDYYbRlTaAlzYzNQOEMBNitdDE55ARRyeRJjXFtCDzcfURxRUBEIK14lXQQCU25cOA',
 }
 
+# 多多进宝转链。只收录标题里能对上色号的，不编造
+拼多多推广链接 = {
+    ('MAC', '子弹头口红', 'Ruby Woo'): 'https://mobile.yangkeduo.com/duo_coupon_landing.html?goods_id=987631523570&pid=44796722_318051512&goods_sign=E9H2R5kj6GZtNN3BwvbApbm-S0ODLmZY_JQkOEDe9o2&cpsSign=CC_260918_44796722_318051512_78dafb77fc8cfc4755dcb0a4ccea28f4&_x_ddjb_act=%7B%22st%22%3A%221%22%7D&duoduo_type=2',
+    ('ColorKey', '空气唇釉', 'R666'): 'https://mobile.yangkeduo.com/duo_coupon_landing.html?goods_id=662803479186&pid=44796722_318051512&goods_sign=E9z2ODhkhAZtNN3BwvbApS4MrkuKD00H_JQyBvcbF9T&cpsSign=CC_260918_44796722_318051512_73be9484b8e9dd814677e923263768d8&_x_ddjb_act=%7B%22st%22%3A%221%22%7D&duoduo_type=2',
+}
+

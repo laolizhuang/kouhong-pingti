@@ -267,6 +267,8 @@ def 画出购买(当前):
         st.markdown('<div class="ad">广告 · 点击购买可能产生佣金</div>', unsafe_allow_html=True)
         if 当前.get("佣金渠道") == "京东":
             st.link_button("去京东购买", 当前["购买链接"], type="primary")
+        elif 当前.get("佣金渠道") == "拼多多":
+            st.link_button("去拼多多购买", 当前["购买链接"], type="primary")
         else:
             st.link_button("去购买", 当前["购买链接"], type="primary")
             if 当前.get("淘口令"):
