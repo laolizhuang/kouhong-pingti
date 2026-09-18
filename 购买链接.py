@@ -1,4 +1,4 @@
-# 淘宝联盟推广链接（爱分享推广位）。没填的色号再看京东推广；两边都没有则跳搜索，没有佣金
+# 淘宝联盟推广链接（爱分享推广位）。没填的色号再看京东、拼多多、唯品会；都没有则跳搜索，没有佣金
 # 键：(品牌, 名称, 色号)，必须和 口红数据.py 里完全一致
 
 推广链接 = {
@@ -131,5 +131,11 @@
 拼多多推广链接 = {
     ('MAC', '子弹头口红', 'Ruby Woo'): 'https://mobile.yangkeduo.com/duo_coupon_landing.html?goods_id=987631523570&pid=44796722_318051512&goods_sign=E9H2R5kj6GZtNN3BwvbApbm-S0ODLmZY_JQkOEDe9o2&cpsSign=CC_260918_44796722_318051512_78dafb77fc8cfc4755dcb0a4ccea28f4&_x_ddjb_act=%7B%22st%22%3A%221%22%7D&duoduo_type=2',
     ('ColorKey', '空气唇釉', 'R666'): 'https://mobile.yangkeduo.com/duo_coupon_landing.html?goods_id=662803479186&pid=44796722_318051512&goods_sign=E9z2ODhkhAZtNN3BwvbApS4MrkuKD00H_JQyBvcbF9T&cpsSign=CC_260918_44796722_318051512_73be9484b8e9dd814677e923263768d8&_x_ddjb_act=%7B%22st%22%3A%221%22%7D&duoduo_type=2',
+}
+
+# 唯品会联盟转链。只收录标题里能对上色号的，不编造
+唯品会推广链接 = {
+    ('阿玛尼', '红管唇釉', '500'): 'https://t.vip.com/wyoQm3Xb3aA',
+    ('迪奥', '烈艳蓝金口红', '080'): 'https://t.vip.com/ExBPjn6iYs9',
 }
 
