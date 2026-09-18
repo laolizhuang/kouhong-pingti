@@ -15,7 +15,12 @@ import streamlit.components.v1 as components
 
 from 口红数据 import 获取口红库
 
-st.set_page_config(page_title="觅色", page_icon="💄", layout="wide")
+st.set_page_config(
+    page_title="觅色",
+    page_icon="💄",
+    layout="wide",
+    menu_items={"Get help": None, "Report a bug": None, "About": None},
+)
 
 # 建议箱会发到这个 QQ 邮箱；授权码不要写进代码，写在 邮箱授权码.txt
 收件邮箱 = "2833909485@qq.com"
@@ -40,7 +45,20 @@ st.markdown(
         font-family: "Noto Sans SC", sans-serif;
         color: #3b2a2a;
     }
-    .block-container { padding-top: 3.4rem; max-width: 1180px; }
+    .block-container { padding-top: 1.4rem; max-width: 1180px; }
+
+    #MainMenu, header, footer,
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    [data-testid="stStatusWidget"],
+    [data-testid="stHeader"],
+    .stDeployButton,
+    .stAppDeployButton,
+    div[data-testid="stToolbarActions"] {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+    }
 
     h1, h2, h3 { font-family: "Noto Serif SC", serif !important; color: #4a2c2c !important; }
 
@@ -308,7 +326,7 @@ def 画出购买(当前):
         else:
             st.link_button("去购买", 当前["购买链接"], type="primary")
             if 当前.get("淘口令"):
-                st.caption("淘口令，复制后打开淘宝")
+                st.caption("手机上也可以：复制下面这串口令，打开淘宝 APP 粘贴，就能进这支商品")
                 st.code(当前["淘口令"], language=None)
         return
     st.markdown(
