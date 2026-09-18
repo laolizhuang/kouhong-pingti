@@ -1,4 +1,4 @@
-# 淘宝联盟推广链接（爱分享推广位）。没填的色号仍跳淘宝搜索，没有佣金
+# 淘宝联盟推广链接（爱分享推广位）。没填的色号再看京东推广；两边都没有则跳搜索，没有佣金
 # 键：(品牌, 名称, 色号)，必须和 口红数据.py 里完全一致
 
 推广链接 = {
@@ -120,5 +120,10 @@
     ('欧莱雅', '小钢笔唇釉', '129'): '38￥ HU108 nVVETQ8fk9V￥',
     ('稚优泉', '唇釉', '666'): '77￥ CZ009 I0clTQ8fjcO￥',
     ('ColorKey', '空气唇釉', 'B620'): '89￥ CZ009 rd9cTQ85aoQ￥',
+}
+
+# 京东联盟一键领链（默认推广位）。只收录核对过色号的正品链接，不编造
+京东推广链接 = {
+    ('阿玛尼', '红管唇釉', '201'): 'https://union-click.jd.com/jdc?e=618%7Cpc%7C&p=JF8BAb4JK1olWAUEUl5cDEIfCl8IGlsUWw4BVV9dCk8VC19MRANLAjZbERscSkAJHS5LRURJQl1XSwwDVFVLUzJVBQtHGF5FAEBYDAxxWh9UEw5lX14KUysDaBliZDUMXQlKOmNQSgYCXR9eHDZNRwYbH1xGWB4cDQ5famZJYyxtNUNnBho2bjBvayptXlh3KAYGUTBfczF1ShkJRhtONERbAxgOdksARzBQRQRIDVlXMRYcXEcXFDNYQwR3B0IOVF9dCU0fAG4JG1kRXw4yMyArAA5ccCloZxtiVUddCTYLWjRFY2MEK1olXgcAXVpbAEwXC184G1wlDWgKXFZdC0IRA28KG2sUbQYEXVZbCU4TBmkIHV8lWgYLZAQGZjl0dwxYbTBlO2Z8M25tOEgnBG8BD11nHFQWUixtOEgRM2w4G1oVXAICU1tdCEgLA2sMHVkRQQYEXVZbCU4TBm0ME1slXwcDUFdtOJWasxwKGStpKV9WFBYWYR1TcSnWlusEL3YCUFlZGXtXQmpNUzIcHH51LDYYbRlTaAlzYzNQOEMBNitdDE55ARRyeRJjXFtCDzcfURxRUBEIK14lXQQCU25cOA',
 }
 

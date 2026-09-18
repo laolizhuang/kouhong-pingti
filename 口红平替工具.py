@@ -265,13 +265,16 @@ def 展示卡片(列表, 放下面=False):
 def 画出购买(当前):
     if 当前.get("有佣金"):
         st.markdown('<div class="ad">广告 · 点击购买可能产生佣金</div>', unsafe_allow_html=True)
-        st.link_button("去购买", 当前["购买链接"], type="primary")
-        if 当前.get("淘口令"):
-            st.caption("淘口令，复制后打开淘宝")
-            st.code(当前["淘口令"], language=None)
+        if 当前.get("佣金渠道") == "京东":
+            st.link_button("去京东购买", 当前["购买链接"], type="primary")
+        else:
+            st.link_button("去购买", 当前["购买链接"], type="primary")
+            if 当前.get("淘口令"):
+                st.caption("淘口令，复制后打开淘宝")
+                st.code(当前["淘口令"], language=None)
         return
     st.markdown(
-        '<div class="ad">广告 · 淘宝联盟暂时没有这支。可去京东或拼多多找同色号，这两边目前没有佣金</div>',
+        '<div class="ad">广告 · 淘宝、京东联盟暂时没有这支。可去各平台找同色号，目前没有佣金</div>',
         unsafe_allow_html=True,
     )
     淘宝, 京东, 拼多多 = st.columns(3)
