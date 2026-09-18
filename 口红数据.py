@@ -166,9 +166,36 @@ from urllib.parse import quote
 from 口红介绍 import 详细介绍
 from 购买链接 import 推广链接, 淘口令
 
+# 京东 / 拼多多搜索时用更常见的店名，容易搜到正品
+_搜索别名 = {
+    "MAC": "MAC 魅可",
+    "YSL": "YSL 圣罗兰",
+    "TF": "汤姆福特 TF",
+    "香奈儿": "香奈儿 CHANEL",
+    "NARS": "NARS 纳斯",
+    "INTO YOU": "INTO YOU",
+    "ColorKey": "colorkey 珂拉琪",
+    "UNNY": "UNNY",
+    "3CE": "3CE",
+}
+
+
+def 购物搜索词(品牌, 名称, 色号):
+    return f"{_搜索别名.get(品牌, 品牌)} {名称} {色号}"
+
 
 def 淘宝搜索链接(品牌, 名称, 色号):
-    return "https://s.taobao.com/search?q=" + quote(f"{品牌} {名称} {色号}")
+    return "https://s.taobao.com/search?q=" + quote(购物搜索词(品牌, 名称, 色号))
+
+
+def 京东搜索链接(品牌, 名称, 色号):
+    return "https://search.jd.com/Search?keyword=" + quote(购物搜索词(品牌, 名称, 色号)) + "&enc=utf-8"
+
+
+def 拼多多搜索链接(品牌, 名称, 色号):
+    return "https://mobile.yangkeduo.com/search_result.html?search_key=" + quote(
+        购物搜索词(品牌, 名称, 色号)
+    )
 
 
 def 获取口红库():
@@ -187,6 +214,8 @@ def 获取口红库():
         链 = (推广链接.get(键) or "").strip()
         口红["有佣金"] = bool(链)
         口红["购买链接"] = 链 or 淘宝搜索链接(一项["品牌"], 一项["名称"], 一项["色号"])
+        口红["京东链接"] = 京东搜索链接(一项["品牌"], 一项["名称"], 一项["色号"])
+        口红["拼多多链接"] = 拼多多搜索链接(一项["品牌"], 一项["名称"], 一项["色号"])
         口红["淘口令"] = (淘口令.get(键) or "").strip()
         口红["视频"] = f"{i:03d}.mp4"
         口红["模特图"] = f"试色模特/{口红['色系']}.png"
