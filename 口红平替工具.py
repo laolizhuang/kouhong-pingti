@@ -230,9 +230,42 @@ def 画出建议箱():
         st.success(st.session_state.pop("建议结果"))
 
 
+def 滚到页面顶部():
+    components.html(
+        """
+        <script>
+        function goTop() {
+          const doc = window.parent.document;
+          const nodes = [
+            doc.querySelector('[data-testid="stAppViewContainer"]'),
+            doc.querySelector('[data-testid="stMain"]'),
+            doc.querySelector('section.main'),
+            doc.querySelector('.main'),
+            doc.scrollingElement,
+            doc.documentElement,
+            doc.body
+          ];
+          for (const el of nodes) {
+            if (!el) continue;
+            try { el.scrollTo(0, 0); } catch (e) {}
+            el.scrollTop = 0;
+          }
+          try { window.parent.scrollTo(0, 0); } catch (e) {}
+        }
+        goTop();
+        setTimeout(goTop, 50);
+        setTimeout(goTop, 250);
+        setTimeout(goTop, 600);
+        </script>
+        """,
+        height=0,
+    )
+
+
 def 选中口红(口红id):
     st.session_state["选中id"] = 口红id
     st.session_state["页面"] = "介绍"
+    st.session_state["滚到顶部"] = True
     st.session_state.pop("平替介绍id", None)
     st.rerun()
 
@@ -352,6 +385,7 @@ def 画出口红介绍(当前):
     st.markdown("<div style='height: 1.2rem'></div>", unsafe_allow_html=True)
     if st.button("← 返回全库"):
         st.session_state["页面"] = "全库"
+        st.session_state["滚到顶部"] = True
         st.session_state.pop("平替介绍id", None)
         st.rerun()
     画出详细介绍(当前)
@@ -445,3 +479,5 @@ else:
     )
 
 画出建议箱()
+if st.session_state.pop("滚到顶部", False):
+    滚到页面顶部()
