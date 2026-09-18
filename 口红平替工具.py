@@ -77,11 +77,10 @@ st.markdown(
         font-size: 1.15rem;
     }
     .meta { color: #8a6a6a; font-size: 0.9rem; }
-    .intro {
-        line-height: 1.9;
-        color: #5a3a3a;
-        font-size: 0.98rem;
-        margin: 8px 0 16px 0;
+    .ad {
+        color: #9a6a6a;
+        font-size: 0.78rem;
+        margin: 4px 0 8px 0;
     }
     .count {
         text-align: center;
@@ -263,6 +262,20 @@ def 展示卡片(列表, 放下面=False):
                         选中口红(口红["id"])
 
 
+def 画出购买(当前):
+    if 当前.get("有佣金"):
+        st.markdown('<div class="ad">广告 · 点击购买可能产生佣金</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(
+            '<div class="ad">广告 · 将跳转淘宝搜索该色号。联盟推广链接填上后才会有佣金</div>',
+            unsafe_allow_html=True,
+        )
+    st.link_button("去购买", 当前["购买链接"], type="primary")
+    if 当前.get("淘口令"):
+        st.caption("淘口令，复制后打开淘宝")
+        st.code(当前["淘口令"], language=None)
+
+
 def 画出详细介绍(当前, 标题=None):
     st.markdown(f"### {标题 or 当前['全名']}")
     st.caption("色号图、试色，以及这支口红的真实上嘴情况")
@@ -284,6 +297,7 @@ def 画出详细介绍(当前, 标题=None):
         f"{当前['色系']} · {当前['妆效']}　｜　参考价 ¥{当前['价格']}"
     )
     st.markdown(f'<div class="intro">{当前["介绍"]}</div>', unsafe_allow_html=True)
+    画出购买(当前)
 
 
 def 画出平替(当前):
