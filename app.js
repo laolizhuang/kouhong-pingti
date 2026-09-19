@@ -1,4 +1,6 @@
 const 邮箱 = "2833909485@qq.com";
+const 首页标题 = "觅色 — 口红平替色号库";
+const 首页简介 = "觅色收录常见口红色号与同色系平替。点开自己挑，复制淘口令或点购买进店。图为示意图，屏幕有色差。广告：下单并结算后可能产生佣金。";
 const 教学 = [
   ["口红图片/口红教学/01.png", "1. 打底保湿", "先涂薄薄一层润唇膏"],
   ["口红图片/口红教学/02.png", "2. 勾勒唇峰", "从唇峰两点开始画轮廓"],
@@ -23,11 +25,25 @@ function 转义(s) {
     .replace(/"/g, "&quot;");
 }
 
+function 资源根() {
+  return /\/p\/[^/]+\.html$/i.test(location.pathname) ? "../" : "";
+}
+
 function 图(src, alt, extra = "") {
-  return `<img src="${转义(src)}" alt="${转义(alt)}" loading="lazy" decoding="async" ${extra} onerror="this.onerror=null;this.src='口红图片/tomato.png'">`;
+  const 前 = 资源根();
+  const url = /^(https?:)?\/\//.test(src) ? src : 前 + src;
+  const fallback = 前 + "口红图片/tomato.png";
+  return `<img src="${转义(url)}" alt="${转义(alt)}" loading="lazy" decoding="async" ${extra} onerror="this.onerror=null;this.src='${转义(fallback)}'">`;
+}
+
+function 介绍地址(id) {
+  return 资源根() + "p/" + encodeURIComponent(id) + ".html";
 }
 
 function 解析路由() {
+  if (window.MISE_PRESELECT) return { 页: "介绍", id: window.MISE_PRESELECT };
+  const file = location.pathname.match(/\/p\/([^/]+)\.html$/i);
+  if (file) return { 页: "介绍", id: decodeURIComponent(file[1]) };
   const raw = decodeURIComponent((location.hash || "#/").replace(/^#/, ""));
   const parts = raw.split("/").filter(Boolean);
   if (parts[0] === "i" && parts[1]) return { 页: "介绍", id: parts.slice(1).join("/") };
@@ -36,12 +52,29 @@ function 解析路由() {
 
 function 去介绍(id) {
   平替展开id = "";
-  location.hash = "#/i/" + encodeURIComponent(id);
+  location.href = 介绍地址(id);
 }
 
 function 回全库() {
   平替展开id = "";
-  location.hash = "#/";
+  location.href = 资源根() + "index.html";
+}
+
+function 写页头(当前) {
+  const desc = document.querySelector('meta[name="description"]');
+  if (!当前) {
+    document.title = 首页标题;
+    if (desc) desc.setAttribute("content", 首页简介);
+    return;
+  }
+  document.title = `${当前.全名} 介绍与同色平替 | 觅色`;
+  const 摘要 = String(当前.介绍 || 当前.说明 || "").slice(0, 80);
+  if (desc) {
+    desc.setAttribute(
+      "content",
+      `${摘要} 图为示意图。广告：点购买或用淘口令进店，结算后可能有佣金。`
+    );
+  }
 }
 
 function 妆效匹配(妆效, 偏好) {
@@ -145,11 +178,11 @@ function 画出全库() {
     $("#grid").innerHTML = list.length
       ? list
           .map(
-            (x) => `<button class="pick" data-id="${转义(x.id)}">
+            (x) => `<a class="pick" href="${转义(介绍地址(x.id))}">
               ${图(x.图片, x.全名)}
               <div class="swatch" style="background:${转义(x.色卡)}"></div>
               <b>${转义(x.简称)}</b>
-            </button>`
+            </a>`
           )
           .join("")
       : `<p class="hint">全库暂时没有这个关键词，可以把色号写到最下面的建议箱。</p>`;
@@ -157,10 +190,6 @@ function 画出全库() {
   $("#q").oninput = 刷新;
   $("#brand").onchange = 刷新;
   $("#tone").onchange = 刷新;
-  $("#grid").onclick = (e) => {
-    const btn = e.target.closest("[data-id]");
-    if (btn) 去介绍(btn.dataset.id);
-  };
   绑建议箱();
   刷新();
 }
@@ -284,16 +313,21 @@ function 渲染() {
       回全库();
       return;
     }
+    写页头(当前);
     画出介绍(当前);
     window.scrollTo(0, 0);
     return;
   }
+  写页头(null);
   画出全库();
   window.scrollTo(0, 0);
 }
 
 async function 启动() {
-  const res = await fetch("kouhong.json");
+  if (/MicroMessenger/i.test(navigator.userAgent)) {
+    document.body.classList.add("in-wechat");
+  }
+  const res = await fetch(资源根() + "kouhong.json");
   库 = await res.json();
   window.addEventListener("hashchange", 渲染);
   渲染();

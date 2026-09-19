@@ -124,3 +124,18 @@ input, select, textarea {
 .warn { color: #b45309; }
 .back { margin: 8px 0 16px; }
 code { font-family: inherit; }
+a.pick { text-decoration: none; display: block; }
+.seo-list { line-height: 1.8; padding-left: 1.2em; }
+.seo-list a { color: #6b3a3a; }
+.wechat-tip {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff4e5;
+  color: #7c4a03;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+body.in-wechat .wechat-tip { display: block; }

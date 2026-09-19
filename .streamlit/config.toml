@@ -1,6 +1,0 @@
-[server]
-headless = true
-
-[client]
-toolbarMode = "viewer"
-showSidebarNavigation = false
