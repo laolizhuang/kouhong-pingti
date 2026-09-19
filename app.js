@@ -69,30 +69,34 @@ function 购买区(当前) {
   if (渠道 === "京东") 按钮 = "去京东购买";
   if (渠道 === "拼多多") 按钮 = "去拼多多购买";
   if (渠道 === "唯品会") 按钮 = "去唯品会购买";
-  const 口令 = 当前.淘口令
-    ? `<p class="cap">手机上也可以：复制下面这串口令，打开淘宝 APP 粘贴，就能进这支商品</p>
-       <div class="kouling" id="kouling">${转义(当前.淘口令)}</div>
-       <button class="btn ghost" type="button" id="copy-kouling">复制口令</button>`
+  const 口令钮 = 当前.淘口令
+    ? `<button class="btn ghost copy-kouling" type="button">复制淘口令</button>`
     : "";
-  return `<div class="ad">广告 · 点击购买并下单后可能产生佣金</div>
-    <a class="btn" href="${转义(当前.购买链接)}" target="_blank" rel="noopener noreferrer">${按钮}</a>
-    ${口令}`;
+  const 口令 = 当前.淘口令
+    ? `<p class="cap">微信打不开链接时：复制口令，打开淘宝 APP 粘贴，就能进这支商品</p>
+       <div class="kouling">${转义(当前.淘口令)}</div>`
+    : "";
+  return `<div class="buy">
+    <div class="ad">广告 · 点购买或用淘口令进店，下单并结算后可能产生佣金</div>
+    <div class="row">${口令钮}<a class="btn" href="${转义(当前.购买链接)}" target="_blank" rel="noopener noreferrer">${按钮}</a></div>
+    ${口令}
+  </div>`;
 }
 
 function 详细介绍(当前) {
   return `
     <h2>${转义(当前.全名)}</h2>
-    <p class="cap">色号图、试色，以及这支口红的真实上嘴情况</p>
-    <div class="shots">
-      <figure>${图(当前.图片, 当前.全名)}<figcaption>色号图</figcaption></figure>
-      <figure>${图(当前.未涂, "未涂")}<figcaption>未涂</figcaption></figure>
-      <figure>${图(当前.涂抹, "涂抹中")}<figcaption>涂抹中</figcaption></figure>
-      <figure>${图(当前.涂好, "涂好")}<figcaption>涂好</figcaption></figure>
-    </div>
-    <div class="swatch" style="background:${转义(当前.色卡)};width:160px;margin-top:12px"></div>
     <p>${转义(当前.品牌)} · ${转义(当前.名称)} · ${转义(当前.色号)}　｜　${转义(当前.色系)} · ${转义(当前.妆效)}　｜　参考价 ¥${当前.价格}</p>
+    <p class="cap">下面是示意图，不是实拍保证。屏幕有色差，下手前请对照实物试色。</p>
     <div class="intro">${转义(当前.介绍)}</div>
     ${购买区(当前)}
+    <div class="shots">
+      <figure>${图(当前.图片, 当前.全名)}<figcaption>色号示意图</figcaption></figure>
+      <figure>${图(当前.未涂, "素唇示意图")}<figcaption>素唇示意图</figcaption></figure>
+      <figure>${图(当前.涂抹, "涂抹示意图")}<figcaption>涂抹示意图</figcaption></figure>
+      <figure>${图(当前.涂好, "上嘴示意图")}<figcaption>上嘴示意图</figcaption></figure>
+    </div>
+    <div class="swatch" style="background:${转义(当前.色卡)};width:160px;margin-top:12px"></div>
   `;
 }
 
@@ -112,7 +116,7 @@ function 画出全库() {
   $("#app").innerHTML = `
     ${图("口红图片/banner.png", "觅色", 'class="banner"')}
     <h1 class="hero-title">觅色</h1>
-    <p class="hero-caption">全库 ${库.length} 支 · 点一支，进入介绍</p>
+    <p class="hero-caption">全库 ${库.length} 支 · 点一支进介绍，可复制淘口令</p>
     <h2>口红全库</h2>
     <div class="filters">
       <input id="q" placeholder="例如：405、Chili、豆沙、完美日记">
@@ -121,7 +125,7 @@ function 画出全库() {
     </div>
     <div class="count" id="count"></div>
     <div class="grid" id="grid"></div>
-    <p class="hint">点开任意口红进入介绍页。屏幕有色差，下手前请对照试色。没收录的名字可以投进最下面的建议箱。</p>
+    <p class="hint">点开任意口红进入介绍页。图是示意图，屏幕有色差，下手前请对照实物试色。微信打不开网页时，用介绍页的淘口令。没收录的名字可以投进最下面的建议箱。</p>
     <h2>先学怎么涂</h2>
     <p class="cap">对照每张图做一遍，就不会花、不会歪。</p>
     <div class="teach">${教学.map(([src, t, d]) => `<div>${图(src, t)}<p><b>${t}</b></p><p class="cap">${d}</p></div>`).join("")}</div>
@@ -238,9 +242,9 @@ function 画出介绍(当前) {
 }
 
 function 绑复制口令() {
-  document.querySelectorAll("#copy-kouling").forEach((btn) => {
+  document.querySelectorAll(".copy-kouling").forEach((btn) => {
     btn.onclick = async () => {
-      const box = btn.parentElement.querySelector(".kouling");
+      const box = btn.closest(".buy")?.querySelector(".kouling");
       const text = box ? box.textContent : "";
       try {
         await navigator.clipboard.writeText(text);

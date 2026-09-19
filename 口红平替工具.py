@@ -316,7 +316,10 @@ def 展示卡片(列表, 放下面=False):
 
 def 画出购买(当前):
     if 当前.get("有佣金"):
-        st.markdown('<div class="ad">广告 · 点击购买可能产生佣金</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="ad">广告 · 点购买或用淘口令进店，下单并结算后可能产生佣金</div>',
+            unsafe_allow_html=True,
+        )
         if 当前.get("佣金渠道") == "京东":
             st.link_button("去京东购买", 当前["购买链接"], type="primary")
         elif 当前.get("佣金渠道") == "拼多多":
@@ -326,7 +329,7 @@ def 画出购买(当前):
         else:
             st.link_button("去购买", 当前["购买链接"], type="primary")
             if 当前.get("淘口令"):
-                st.caption("手机上也可以：复制下面这串口令，打开淘宝 APP 粘贴，就能进这支商品")
+                st.caption("微信打不开链接时：复制下面这串口令，打开淘宝 APP 粘贴，就能进这支商品")
                 st.code(当前["淘口令"], language=None)
         return
     st.markdown(
@@ -344,26 +347,26 @@ def 画出购买(当前):
 
 def 画出详细介绍(当前, 标题=None):
     st.markdown(f"### {标题 or 当前['全名']}")
-    st.caption("色号图、试色，以及这支口红的真实上嘴情况")
-    图列 = st.columns(4, gap="large")
-    with 图列[0]:
-        st.image(图片路径(当前["图片"]), use_container_width=True, caption="色号图")
-    with 图列[1]:
-        st.image(试色图路径(当前["色系"], "未涂"), use_container_width=True, caption="未涂")
-    with 图列[2]:
-        st.image(试色图路径(当前["色系"], "涂抹"), use_container_width=True, caption="涂抹中")
-    with 图列[3]:
-        st.image(试色图路径(当前["色系"], "涂好"), use_container_width=True, caption="涂好")
-    st.markdown(
-        f'<div class="swatch" style="background:{当前["色卡"]}; width:160px;"></div>',
-        unsafe_allow_html=True,
-    )
     st.write(
         f"{当前['品牌']} · {当前['名称']} · {当前['色号']}　｜　"
         f"{当前['色系']} · {当前['妆效']}　｜　参考价 ¥{当前['价格']}"
     )
+    st.caption("下面是示意图，不是实拍保证。屏幕有色差，下手前请对照实物试色。")
     st.markdown(f'<div class="intro">{当前["介绍"]}</div>', unsafe_allow_html=True)
     画出购买(当前)
+    图列 = st.columns(4, gap="large")
+    with 图列[0]:
+        st.image(图片路径(当前["图片"]), use_container_width=True, caption="色号示意图")
+    with 图列[1]:
+        st.image(试色图路径(当前["色系"], "未涂"), use_container_width=True, caption="素唇示意图")
+    with 图列[2]:
+        st.image(试色图路径(当前["色系"], "涂抹"), use_container_width=True, caption="涂抹示意图")
+    with 图列[3]:
+        st.image(试色图路径(当前["色系"], "涂好"), use_container_width=True, caption="上嘴示意图")
+    st.markdown(
+        f'<div class="swatch" style="background:{当前["色卡"]}; width:160px;"></div>',
+        unsafe_allow_html=True,
+    )
 
 
 def 画出平替(当前):
@@ -422,7 +425,7 @@ else:
     st.image(图片路径("banner.png"), use_container_width=True)
     st.markdown('<div class="hero-title">觅色</div>', unsafe_allow_html=True)
     st.markdown(
-        f'<div class="hero-caption">全库 {len(口红库)} 支 · 点一支，进入介绍</div>',
+        f'<div class="hero-caption">全库 {len(口红库)} 支 · 点一支进介绍，可复制淘口令</div>',
         unsafe_allow_html=True,
     )
     st.markdown("### 先学怎么涂")
@@ -492,7 +495,7 @@ else:
                     选中口红(口红["id"])
 
     st.markdown(
-        '<div class="hint">点开任意口红进入介绍页。屏幕有色差，下手前请对照试色。没收录的名字可以投进最下面的建议箱。</div>',
+        '<div class="hint">点开任意口红进入介绍页。图是示意图，屏幕有色差，下手前请对照实物试色。没收录的名字可以投进最下面的建议箱。</div>',
         unsafe_allow_html=True,
     )
 
